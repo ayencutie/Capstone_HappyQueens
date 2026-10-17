@@ -1,0 +1,3 @@
+<Files "otp-log.txt">
+  Require all denied
+</Files>

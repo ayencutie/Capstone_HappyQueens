@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/login-modal.css">
+  <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <nav class="navbar container">
+
+      <div class="logo">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div>
+          <div class="logo-name">Happy Queen's</div>
+          <div class="logo-tagline">CRAFTY HOUSE</div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about-us.html">About Us</a></li>
+        <li><a href="our-services.html">Our Services</a></li>
+        <li><a href="contact-us.html">Contact Us</a></li>
+        <li><a href="track-order.html">Track Order</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button type="button" class="btn btn-outline" id="loginNavBtn">Log In</button>
+        <a href="register.html" class="btn btn-filled">Register</a>
+      </div>
+
+    </nav>
+  </header>
+
+  <!-- Email OTP verification -->
+  <section class="auth-section">
+    <div class="auth-card auth-card-center">
+      <div class="auth-icon-badge" style="margin-left:auto;margin-right:auto;">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+      </div>
+      <span class="auth-eyebrow">Confirm It's You</span>
+      <h1>Verify Your Email</h1>
+      <p class="auth-sub">We sent a 6-digit code to <span class="otp-target" id="emailTarget">your email</span>. Enter it below to finish creating your account.</p>
+
+      <div class="otp-inputs">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+        <input type="text" inputmode="numeric" maxlength="1" class="otp-digit">
+      </div>
+
+      <p class="otp-error" id="otpError">Please enter the 6-digit code sent to your email.</p>
+
+      <button type="button" class="btn-auth-primary" id="verifyBtn">Verify &amp; Continue</button>
+
+      <p class="otp-resend">Didn't get a code? <button type="button" id="resendBtn">Resend code</button></p>
+
+      <p class="auth-footnote"><a href="register.html">&larr; Back to registration</a></p>
+    </div>
+  </section>
+
+  <!-- Pre-Footer Info Bar -->
+  <section class="info-bar">
+    <div class="info-bar-content container">
+
+      <div class="info-col">
+        <h5 class="info-heading">Get in Touch</h5>
+        <ul class="info-list">
+          <li><i class="fa-solid fa-location-dot"></i> Block 4 Lot 24 Satima Village, Talon Dos, Las Piñas City</li>
+          <li><i class="fa-solid fa-phone"></i> 0900 000 0000</li>
+          <li><i class="fa-solid fa-envelope"></i> happyqueenscraftyhouse@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="info-col info-col-center">
+        <h5 class="info-heading">Follow Us</h5>
+        <div class="social-links">
+          <a href="https://www.facebook.com/HappyQueensCraftyHouse" class="social-pill" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i> Facebook Page</a>
+          <a href="https://www.tiktok.com/@happy_queens0?is_from_webapp=1&sender_device=pc" class="social-pill" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i> TikTok Page</a>
+        </div>
+      </div>
+
+      <div class="info-col info-col-right">
+        <h5 class="info-heading">We Accept</h5>
+        <div class="payment-badges">
+          <span class="payment-badge">
+            <span class="payment-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuMUNABqHT4ywTIjausoiBySbP5Cqvu1vzjQPZM5eodg&s=10" alt="GCash logo"></span>
+            GCash
+          </span>
+          <span class="payment-badge">
+            <span class="payment-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLD5NPfoxXdSJ0pJmfk-yENCJSYF7syxk6IlEvvpxJtg&s=10" alt="PayMaya logo"></span>
+            PayMaya
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content container">
+      <span class="footer-copyright">&copy; 2025&ndash;2026 Happy Queen's Crafty House. All rights reserved.</span>
+    </div>
+  </footer>
+
+  
+
+
+  <!-- Log In modal -->
+  <div class="modal-overlay" id="loginModalOverlay">
+    <div class="auth-card auth-card-center" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+      <button type="button" class="modal-close" id="loginModalClose" aria-label="Close">&times;</button>
+      <span class="auth-eyebrow">Welcome Back</span>
+      <h1 id="loginModalTitle">Log In</h1>
+      <p class="auth-sub">Enter your email or phone number and password.</p>
+
+      <form id="loginModalForm" novalidate style="text-align:left;">
+        <div class="form-field">
+          <label for="loginIdentifier">Email or Phone Number</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="loginIdentifier" name="loginIdentifier" placeholder="you@gmail.com or 09XX XXX XXXX" required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="loginModalPassword">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="loginModalPassword" name="loginModalPassword" placeholder="Enter your password" required>
+          </div>
+        </div>
+
+        <p class="auth-footnote" style="margin:-6px 0 18px; text-align:right;"><a href="../html/forgot-password.html" id="forgotPasswordLink">Forgot password?</a></p>
+
+        <button type="submit" class="btn-auth-primary">Log In</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <button type="button" class="btn-auth-google" id="googleModalLoginBtn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+        Continue with Google
+      </button>
+
+      <p class="auth-footnote">Don't have an account yet? <button type="button" class="link-btn" id="goToRegisterBtn">Register</button></p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/login-modal.js"></script>
+  <script src="../js/verify-otp.js"></script>
+
+</body>
+</html>

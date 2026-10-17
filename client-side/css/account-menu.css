@@ -1,0 +1,97 @@
+/* ==========================================================================
+   Account menu — logged-in navbar dropdown (uses variables from homepage.css)
+   ========================================================================== */
+.account-menu {
+  position: relative;
+}
+
+.account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 6px;
+  color: var(--color-accent);
+  background: none;
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.account-trigger:hover {
+  background-color: var(--color-primary-pale);
+  border-color: var(--color-primary);
+}
+
+.account-trigger .fa-circle-user {
+  font-size: 30px;
+}
+
+.account-chevron {
+  font-size: 11px;
+  transition: transform 0.2s ease;
+}
+
+.account-menu.is-open .account-chevron {
+  transform: rotate(180deg);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 210px;
+  padding: 8px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(22, 59, 74, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+.account-menu.is-open .account-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.account-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.account-dropdown-item i {
+  width: 16px;
+  color: var(--color-primary);
+}
+
+.account-dropdown-item:hover {
+  background-color: var(--color-bg-soft);
+}
+
+.account-dropdown-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background-color: var(--color-border);
+}
+
+.account-dropdown-logout,
+.account-dropdown-logout i {
+  color: #c0392b;
+}

@@ -1,0 +1,400 @@
+/* ==========================================================================
+   Registration flow — extra styles (uses variables from styles.css)
+   ========================================================================== */
+
+.auth-section {
+  display: flex;
+  justify-content: center;
+  padding: 56px 20px 80px;
+  background-color: var(--color-bg-soft);
+  min-height: calc(100vh - 260px);
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  padding: 40px 36px 36px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(22, 59, 74, 0.10);
+  overflow: hidden;
+}
+
+/* signature: a little "washi tape" strip across the top corner, a nod to the
+   crafts/prints business, standing in for a plain accent bar */
+.auth-card::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: -30px;
+  width: 140px;
+  height: 26px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-primary) 0 8px,
+    var(--color-white) 8px 16px
+  );
+  opacity: 0.9;
+  transform: rotate(-40deg);
+  border-radius: 3px;
+}
+
+.auth-eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.auth-card h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.auth-card > p.auth-sub {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-light);
+  margin-bottom: 28px;
+}
+
+/* --- Form fields ------------------------------------------------------- */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap i {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+.form-field input[type="text"],
+.form-field input[type="tel"],
+.form-field input[type="email"],
+.form-field input[type="password"] {
+  width: 100%;
+  padding: 12px 14px 12px 38px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(22, 59, 74, 0.08);
+}
+
+.field-hint {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+
+/* --- Agreement checkbox -------------------------------------------------- */
+.agreement-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 6px 0 22px;
+}
+
+.agreement-row input[type="checkbox"] {
+  margin-top: 3px;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.agreement-row label {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-light);
+  cursor: pointer;
+}
+
+.agreement-row a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.agreement-row a:hover {
+  text-decoration: underline;
+}
+
+/* --- Buttons ------------------------------------------------------------- */
+.btn-auth-primary {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-white);
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.btn-auth-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-auth-primary:active {
+  transform: scale(0.99);
+}
+
+.btn-auth-primary:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-light);
+  cursor: not-allowed;
+}
+
+.btn-auth-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-auth-google:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-soft);
+}
+
+.btn-auth-google img {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-auth-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-auth-link {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn-auth-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Divider --------------------------------------------------------------- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/* --- Footnote / switch link -------------------------------------------- */
+.auth-footnote {
+  margin-top: 24px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.auth-footnote a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-footnote a:hover {
+  text-decoration: underline;
+}
+
+/* --- OTP code inputs ----------------------------------------------------- */
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px 0 6px;
+}
+
+.otp-inputs input {
+  width: 46px;
+  height: 54px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-text);
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.otp-inputs input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(22, 59, 74, 0.08);
+}
+
+.otp-target {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.otp-resend {
+  margin: 16px 0 4px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.otp-resend button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.otp-resend button:hover {
+  text-decoration: underline;
+}
+
+.otp-error {
+  display: none;
+  margin: -6px 0 14px;
+  font-size: 12.5px;
+  text-align: center;
+  color: #c0392b;
+}
+
+.otp-error.is-visible {
+  display: block;
+}
+
+/* --- Google verify icon panel -------------------------------------------- */
+.auth-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+  font-size: 22px;
+  color: var(--color-primary);
+  background-color: var(--color-bg-soft);
+  border-radius: 16px;
+}
+
+/* --- Success state --------------------------------------------------------- */
+.auth-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  margin: 4px auto 20px;
+  font-size: 30px;
+  color: var(--color-white);
+  background-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+.auth-card.auth-card-center {
+  text-align: center;
+}
+
+.auth-card.auth-card-center .auth-eyebrow,
+.auth-card.auth-card-center h1,
+.auth-card.auth-card-center p {
+  text-align: center;
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 32px 22px 28px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .otp-inputs input {
+    width: 40px;
+    height: 48px;
+    font-size: 19px;
+  }
+}
