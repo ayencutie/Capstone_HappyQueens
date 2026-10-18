@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="client-side/js/api.js"></script>
+  <script src="client-side/js/admin-common.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers — Admin — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="client-side/css/styles.css">
+  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+  <div class="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div class="admin-sidebar-brand-text">
+          <strong>Happy Queen's</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <div class="admin-nav-label">Overview</div>
+        <a href="admin-dashboard.html" class="admin-nav-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+
+        <div class="admin-nav-label">Manage</div>
+        <a href="admin-orders.html" class="admin-nav-link"><i class="fa-solid fa-receipt"></i> Orders</a>
+        <a href="admin-customers.html" class="admin-nav-link is-active"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="admin-inquiries.html" class="admin-nav-link"><i class="fa-solid fa-envelope-open-text"></i> Inquiries</a>
+        <a href="admin-services.html" class="admin-nav-link"><i class="fa-solid fa-boxes-stacked"></i> Services</a>
+        <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
+
+        <div class="admin-nav-label">Store</div>
+        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        Logged in as <strong style="color:#fff;">Admin</strong>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Toggle menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <div class="admin-page-title">Customers</div>
+            <div class="admin-page-subtitle">Everyone who has ordered from your shop.</div>
+          </div>
+        </div>
+
+        <div class="admin-topbar-right">
+          <div class="admin-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Quick search...">
+          </div>
+          <button type="button" class="admin-icon-btn" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <button type="button" class="account-trigger" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="admin-avatar">HQ</span>
+              <i class="fa-solid fa-chevron-down account-chevron"></i>
+            </button>
+            <div class="account-dropdown" id="accountDropdown" role="menu">
+              <a href="admin-dashboard.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+              <a href="#" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gear"></i> Account Settings</a>
+              <div class="account-dropdown-divider"></div>
+              <button type="button" class="account-dropdown-item account-dropdown-logout" id="logoutBtn" role="menuitem">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+        <div class="admin-panel">
+          <div class="admin-table-controls">
+            <input type="text" id="customersSearch" class="admin-inline-search" placeholder="Search by name or email...">
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Orders</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody id="customersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    hqOnReady(function () {
+      var body = document.getElementById('customersTableBody');
+      var search = document.getElementById('customersSearch');
+      var toggle = document.getElementById('adminSidebarToggle');
+      var sidebar = document.getElementById('adminSidebar');
+      var customers = [];
+      if (toggle && sidebar) toggle.addEventListener('click', function () { sidebar.classList.toggle('is-open'); });
+
+      function render() {
+        var q = (search ? search.value : '').trim().toLowerCase();
+        var rows = customers.filter(function (c) {
+          return !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+        });
+        if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + (customers.length ? 'No customers match your search.' : 'No customers have registered yet.') + '</td></tr>'; return; }
+        body.innerHTML = rows.map(function (c) {
+          return '<tr><td class="admin-cell-strong">' + hqEsc(c.name) + '<span class="admin-cell-sub">' + hqEsc(c.id) + '</span></td><td>' + hqEsc(c.email) + '</td><td>' + hqEsc(c.phone) + '</td><td>' + c.orders + '</td><td>' + hqDate(c.joined) + '</td></tr>';
+        }).join('');
+      }
+
+      if (search) search.addEventListener('input', render);
+      hqAdmin('customers').then(function (r) {
+        if (!r.ok) { body.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + hqEsc(r.error || 'Could not load customers.') + '</td></tr>'; return; }
+        customers = r.customers; render();
+      });
+    });
+  </script>
+
+  
+
+</body>
+</html>

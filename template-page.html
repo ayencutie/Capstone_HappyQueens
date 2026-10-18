@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script src="client-side/js/api.js"></script>
+  <script src="client-side/js/admin-common.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Queen's Crafty House — Templates</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="template-page.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">HQ</div>
+          <div>
+            <strong>Happy Queen's</strong>
+            <span>Admin Panel</span>
+          </div>
+        </div>
+
+        <nav class="navigation" aria-label="Admin navigation">
+          <p class="nav-label">Overview</p>
+          <a href="admin-dashboard.html">Dashboard</a>
+
+          <p class="nav-label">Manage</p>
+          <a href="admin-orders.html">Orders</a>
+          <a href="admin-customers.html">Customers</a>
+          <a href="admin-inquiries.html">Inquiries</a>
+          <a href="admin-services.html">Services</a>
+          <a href="#" class="active" aria-current="page">Templates</a>
+
+          <p class="nav-label">Store</p>
+          <a href="client-side/html/index.html">View Website</a>
+        </nav>
+
+        <div class="admin-profile">
+          <div class="avatar">A</div>
+          <span>Logged in as <strong>Admin</strong></span>
+          <a href="#" id="logoutBtn" style="margin-left:auto;color:#7aadad;font-size:11px;text-decoration:underline;">Log out</a>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <strong>Templates</strong>
+            <span>Organize designs by service folder.</span>
+          </div>
+          <div class="topbar-mark">HQ</div>
+        </header>
+
+        <section class="content">
+          <div id="breadcrumb" class="breadcrumb" hidden></div>
+
+          <div class="page-heading">
+            <div>
+              <h1 id="page-title">Template Library</h1>
+              <p id="page-description">
+                Open a service folder to upload and manage its design templates.
+              </p>
+            </div>
+            <div class="template-total">
+              <strong id="total-count">0</strong>
+              <span>total templates</span>
+            </div>
+          </div>
+
+          <div id="search-wrap" class="search-wrap">
+            <label for="folder-search">Search folders</label>
+            <input id="folder-search" type="search" placeholder="Search template folders..." />
+          </div>
+
+          <div id="folder-grid" class="folder-grid"></div>
+
+          <div id="template-toolbar" class="template-toolbar" hidden>
+            <div>
+              <h2 id="template-heading">Design Templates</h2>
+              <p>Files uploaded here stay inside this specific folder.</p>
+            </div>
+            <select id="occasion-select" aria-label="Occasion" style="margin-left:auto;margin-right:12px;padding:10px 12px;border:1px solid #dcecec;border-radius:12px;background:#fff;font:inherit;color:inherit;"></select>
+            <button id="upload-button" class="primary-button" type="button">
+              <span>+</span> Upload Templates
+            </button>
+            <input id="file-input" type="file" accept="image/*,.pdf" multiple hidden />
+          </div>
+
+          <div id="empty-upload" class="empty-upload" hidden>
+            <div class="upload-symbol">+</div>
+            <strong>No templates in this folder yet</strong>
+            <p>Upload PNG, JPG, or PDF files up to 20 MB each.</p>
+            <button id="empty-upload-button" class="secondary-button" type="button">
+              Browse Files
+            </button>
+          </div>
+
+          <div id="template-grid" class="template-grid" hidden></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="template-page.js"></script>
+    
+  </body>
+</html>

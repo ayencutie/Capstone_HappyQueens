@@ -2,7 +2,7 @@
 require __DIR__ . '/config.php';
 
 $action = $_GET['action'] ?? '';
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !in_array($action, ['me', 'pending'], true)) fail('Method not allowed', 405);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !in_array($action, ['me', 'pending', 'profile'], true)) fail('Method not allowed', 405);
 $in = input();
 
 function pw_error($pw) {
@@ -13,6 +13,12 @@ function pw_error($pw) {
 function user_by_id($id) {
     $s = db()->prepare('SELECT * FROM users WHERE id=?'); $s->execute([$id]);
     return $s->fetch() ?: null;
+}
+function member() {   // the logged-in customer (from the database)
+    if (($_SESSION['user']['role'] ?? '') !== 'customer') fail('Please log in first.', 401);
+    $u = user_by_id((int)$_SESSION['user']['id']);
+    if (!$u) fail('Please log in first.', 401);
+    return $u;
 }
 function login_user($u) {
     session_regenerate_id(true);
@@ -150,6 +156,45 @@ try {
         db()->prepare('UPDATE users SET password_hash=?, failed_attempts=0, locked_until=0 WHERE id=?')
             ->execute([password_hash($pw, PASSWORD_DEFAULT), $uid]);
         unset($_SESSION['reset_user_id'], $_SESSION['reset_pending_user_id'], $_SESSION['reset_until']);
+        out(['ok' => true]);
+
+    // ---------------- My profile / settings ----------------
+    case 'profile':
+        $u = member();
+        $c = db()->prepare("SELECT COUNT(*) AS total, COALESCE(SUM(status NOT IN ('completed','cancelled')),0) AS open_orders FROM orders WHERE user_id=?");
+        $c->execute([$u['id']]); $n = $c->fetch();
+        out(['ok' => true, 'profile' => ['firstName' => $u['first_name'], 'lastName' => $u['last_name'], 'email' => $u['email'], 'contactNo' => $u['contact_no'],
+             'since' => substr($u['created_at'], 0, 10), 'orders' => (int)$n['total'], 'openOrders' => (int)$n['open_orders']]]);
+
+    case 'update_profile':
+        $u = member();
+        $first = trim($in['firstName'] ?? ''); $last = trim($in['lastName'] ?? ''); $phone = normalize_phone($in['contactNo'] ?? '');
+        if ($first === '' || $last === '' || mb_strlen($first) > 60 || mb_strlen($last) > 60) fail('Please enter your first and last name.');
+        if (!preg_match('/^09\d{9}$/', $phone)) fail('Please enter a valid Philippine mobile number.');
+        $q = db()->prepare('SELECT COUNT(*) FROM users WHERE contact_no=? AND id<>?'); $q->execute([$phone, $u['id']]);
+        if ($q->fetchColumn() > 0) fail('That phone number is already used by another account.', 409);
+        db()->prepare('UPDATE users SET first_name=?, last_name=?, contact_no=? WHERE id=?')->execute([$first, $last, $phone, $u['id']]);
+        $_SESSION['user']['firstName'] = $first;
+        out(['ok' => true]);
+
+    case 'change_password':
+        $u = member();
+        $cur = (string)($in['currentPassword'] ?? ''); $new = (string)($in['newPassword'] ?? '');
+        if (!$u['password_hash'] || !password_verify($cur, $u['password_hash'])) fail('Your current password is not correct.', 403);
+        if ($e = pw_error($new)) fail($e);
+        if ($cur === $new) fail('Your new password must be different from the current one.');
+        db()->prepare('UPDATE users SET password_hash=? WHERE id=?')->execute([password_hash($new, PASSWORD_DEFAULT), $u['id']]);
+        session_regenerate_id(true);
+        out(['ok' => true]);
+
+    case 'delete_account':
+        $u = member();
+        if (!$u['password_hash'] || !password_verify((string)($in['password'] ?? ''), $u['password_hash'])) fail('Your password is not correct.', 403);
+        $q = db()->prepare("SELECT COUNT(*) FROM orders WHERE user_id=? AND status NOT IN ('completed','cancelled')"); $q->execute([$u['id']]);
+        if ($q->fetchColumn() > 0) fail('You still have orders in progress. Please wait until they are completed or cancel them first.');
+        db()->prepare('DELETE FROM users WHERE id=?')->execute([$u['id']]);   // old orders stay for our records, without your name
+        $_SESSION = [];
+        session_destroy();
         out(['ok' => true]);
 
     case 'google':

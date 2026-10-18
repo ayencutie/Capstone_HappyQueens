@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/register.css">
+  <link rel="stylesheet" href="../css/login-modal.css">
+  <link rel="stylesheet" href="../css/our-services.css">
+  <link rel="stylesheet" href="../css/order.css">
+  <link rel="stylesheet" href="../css/account-menu.css">
+
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <nav class="navbar container">
+
+      <div class="logo">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div>
+          <div class="logo-name">Happy Queen's</div>
+          <div class="logo-tagline">CRAFTY HOUSE</div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a href="homepage.html">Home</a></li>
+        <li><a href="about-us2.html">About Us</a></li>
+        <li><a href="our-services.html">Our Services</a></li>
+        <li><a href="contact-us2.html">Contact Us</a></li>
+        <li><a href="track-order2.html">Track Order</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="account-menu" id="accountMenu">
+          <button type="button" class="account-trigger" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false">
+            <i class="fa-solid fa-circle-user"></i>
+            <i class="fa-solid fa-chevron-down account-chevron"></i>
+          </button>
+
+          <div class="account-dropdown" id="accountDropdown" role="menu">
+            <a href="profile.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-user"></i> View Profile</a>
+            <a href="orders.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-box"></i> View Order</a>
+            <a href="settings.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gear"></i> Settings</a>
+            <div class="account-dropdown-divider"></div>
+            <button type="button" class="account-dropdown-item account-dropdown-logout" id="logoutBtn" role="menuitem">
+              <i class="fa-solid fa-right-from-bracket"></i> Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </nav>
+  </header>
+
+  <section class="order-section container">
+    <div id="completeCard"><p class="order-message">Loading&hellip;</p></div>
+  </section>
+
+  <!-- Pre-Footer Info Bar -->
+  <section class="info-bar">
+    <div class="info-bar-content container">
+
+      <div class="info-col">
+        <h5 class="info-heading">Get in Touch</h5>
+        <ul class="info-list">
+          <li><i class="fa-solid fa-location-dot"></i> Block 4 Lot 24 Satima Village, Talon Dos, Las Piñas City</li>
+          <li><i class="fa-solid fa-phone"></i> 0900 000 0000</li>
+          <li><i class="fa-solid fa-envelope"></i> happyqueenscraftyhouse@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="info-col info-col-center">
+        <h5 class="info-heading">Follow Us</h5>
+        <div class="social-links">
+          <a href="https://www.facebook.com/HappyQueensCraftyHouse" class="social-pill" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i> Facebook Page</a>
+          <a href="https://www.tiktok.com/@happy_queens0?is_from_webapp=1&sender_device=pc" class="social-pill" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i> TikTok Page</a>
+        </div>
+      </div>
+
+      <div class="info-col info-col-right">
+        <h5 class="info-heading">We Accept</h5>
+        <div class="payment-badges">
+          <span class="payment-badge">
+            <span class="payment-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuMUNABqHT4ywTIjausoiBySbP5Cqvu1vzjQPZM5eodg&s=10" alt="GCash logo"></span>
+            GCash
+          </span>
+          <span class="payment-badge">
+            <span class="payment-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLD5NPfoxXdSJ0pJmfk-yENCJSYF7syxk6IlEvvpxJtg&s=10" alt="PayMaya logo"></span>
+            PayMaya
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content container">
+      <span class="footer-copyright">&copy; 2025&ndash;2026 Happy Queen's Crafty House. All rights reserved.</span>
+    </div>
+  </footer>
+
+    <script src="../js/api.js"></script>
+  <script src="../js/order-complete.js"></script>
+  <script src="../js/account-menu.js"></script>
+
+</body>
+</html>

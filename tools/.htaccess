@@ -1,0 +1,2 @@
+# The Python script and the downloaded model must never be opened from the browser.
+Require all denied

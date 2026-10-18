@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="client-side/js/api.js"></script>
+  <script src="client-side/js/admin-common.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Admin — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="client-side/css/styles.css">
+  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+  <div class="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div class="admin-sidebar-brand-text">
+          <strong>Happy Queen's</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <div class="admin-nav-label">Overview</div>
+        <a href="admin-dashboard.html" class="admin-nav-link is-active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+
+        <div class="admin-nav-label">Manage</div>
+        <a href="admin-orders.html" class="admin-nav-link"><i class="fa-solid fa-receipt"></i> Orders</a>
+        <a href="admin-customers.html" class="admin-nav-link"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="admin-inquiries.html" class="admin-nav-link"><i class="fa-solid fa-envelope-open-text"></i> Inquiries</a>
+        <a href="admin-services.html" class="admin-nav-link"><i class="fa-solid fa-boxes-stacked"></i> Services</a>
+        <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
+
+        <div class="admin-nav-label">Store</div>
+        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        Logged in as <strong style="color:#fff;">Admin</strong>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Toggle menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <div class="admin-page-title">Dashboard</div>
+            <div class="admin-page-subtitle">Here's what's happening with your shop today.</div>
+          </div>
+        </div>
+
+        <div class="admin-topbar-right">
+          <div class="admin-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Quick search...">
+          </div>
+          <button type="button" class="admin-icon-btn" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <button type="button" class="account-trigger" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="admin-avatar">HQ</span>
+              <i class="fa-solid fa-chevron-down account-chevron"></i>
+            </button>
+            <div class="account-dropdown" id="accountDropdown" role="menu">
+              <a href="admin-dashboard.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+              <a href="#" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gear"></i> Account Settings</a>
+              <div class="account-dropdown-divider"></div>
+              <button type="button" class="account-dropdown-item account-dropdown-logout" id="logoutBtn" role="menuitem">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+        <div class="admin-stat-grid" id="dashboardStats"></div>
+
+        <div class="admin-grid-2">
+          <div class="admin-panel">
+            <div class="admin-panel-header">
+              <span class="admin-panel-title">Revenue (recent days)</span>
+            </div>
+            <div class="admin-bars" id="dashboardBars"></div>
+          </div>
+
+          <div class="admin-panel">
+            <div class="admin-panel-header">
+              <span class="admin-panel-title">Orders by Status</span>
+            </div>
+            <div class="admin-status-list" id="statusBreakdown"></div>
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <span class="admin-panel-title">Recent Orders</span>
+            <a href="admin-orders.html" class="admin-panel-link">View all <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    // ---- Self-contained sample data + rendering (no external file dependency) ----
+    var ADMIN_STATUS_LABELS = {
+      'pending': 'Pending', 'in-design': 'In Design', 'printing': 'Printing',
+      'packing': 'Packing', 'out-for-delivery': 'Out for Delivery',
+      'completed': 'Completed', 'cancelled': 'Cancelled'
+    };
+    var ADMIN_SAMPLE_ORDERS = [];
+
+    function formatPeso(amount) { return '₱' + Number(amount).toLocaleString('en-PH'); }
+    function statusBadge(status) {
+      var label = ADMIN_STATUS_LABELS[status] || status;
+      return '<span class="status-badge status-' + status + '">' + label + '</span>';
+    }
+
+    hqOnReady(async function () {
+      // real orders from the database (oldest first, like the sample data was)
+      var res = await hqAdmin('orders');
+      ADMIN_SAMPLE_ORDERS = res.ok ? res.orders.map(function (o) {
+        return { id: o.id, customer: o.customer, service: o.service, qty: o.qty, total: o.total, paid: o.amountPaid, payment: o.payment, status: o.status, date: o.date };
+      }).reverse() : [];
+
+      var sidebar = document.getElementById('adminSidebar');
+      var sidebarToggle = document.getElementById('adminSidebarToggle');
+      if (sidebar && sidebarToggle) {
+        sidebarToggle.addEventListener('click', function () { sidebar.classList.toggle('is-open'); });
+      }
+
+      // Stat cards
+      var dashboardStats = document.getElementById('dashboardStats');
+      if (dashboardStats) {
+        var totalOrders = ADMIN_SAMPLE_ORDERS.length;
+        var pendingCount = ADMIN_SAMPLE_ORDERS.filter(function (o) { return o.status === 'pending'; }).length;
+        var completedCount = ADMIN_SAMPLE_ORDERS.filter(function (o) { return o.status === 'completed'; }).length;
+        var revenue = ADMIN_SAMPLE_ORDERS.filter(function (o) { return o.status !== 'cancelled'; }).reduce(function (s, o) { return s + o.paid; }, 0);   // payments really received
+
+        dashboardStats.innerHTML =
+          '<div class="admin-stat-card"><div class="admin-stat-icon tone-primary"><i class="fa-solid fa-receipt"></i></div>' +
+          '<div class="admin-stat-body"><div class="admin-stat-value">' + totalOrders + '</div><div class="admin-stat-label">Total Orders</div></div></div>' +
+          '<div class="admin-stat-card"><div class="admin-stat-icon tone-warn"><i class="fa-solid fa-hourglass-half"></i></div>' +
+          '<div class="admin-stat-body"><div class="admin-stat-value">' + pendingCount + '</div><div class="admin-stat-label">Pending Orders</div></div></div>' +
+          '<div class="admin-stat-card"><div class="admin-stat-icon tone-accent"><i class="fa-solid fa-circle-check"></i></div>' +
+          '<div class="admin-stat-body"><div class="admin-stat-value">' + completedCount + '</div><div class="admin-stat-label">Completed Orders</div></div></div>' +
+          '<div class="admin-stat-card"><div class="admin-stat-icon tone-danger"><i class="fa-solid fa-peso-sign"></i></div>' +
+          '<div class="admin-stat-body"><div class="admin-stat-value">' + formatPeso(revenue) + '</div><div class="admin-stat-label">Total Revenue</div></div></div>';
+      }
+
+      // Revenue bars
+      var dashboardBars = document.getElementById('dashboardBars');
+      if (dashboardBars) {
+        var totals = {};
+        ADMIN_SAMPLE_ORDERS.forEach(function (o) { if (o.status !== 'cancelled') totals[o.date] = (totals[o.date] || 0) + o.paid; });
+        var days = Object.keys(totals).sort();
+        var max = days.length ? Math.max.apply(null, Object.values(totals)) : 0;
+        dashboardBars.innerHTML = !days.length ? '<p style="padding:20px;color:#87a9a9;">No payments received yet.</p>' : days.map(function (day) {
+          var value = totals[day];
+          var heightPct = max ? Math.round((value / max) * 100) : 0;
+          var label = new Date(day + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return '<div class="admin-bar-col"><div class="admin-bar" style="height:' + Math.max(heightPct, 6) + '%;" title="' + formatPeso(value) + '"></div><span class="admin-bar-label">' + label + '</span></div>';
+        }).join('');
+      }
+
+      // Status breakdown
+      var statusBreakdown = document.getElementById('statusBreakdown');
+      if (statusBreakdown) {
+        var colors = { 'pending': '#D99A2B', 'in-design': '#5A3FC0', 'printing': '#1D6FA5', 'packing': '#1E7A8C', 'out-for-delivery': '#B5590C', 'completed': '#22803F', 'cancelled': '#B23434' };
+        var counts = {};
+        ADMIN_SAMPLE_ORDERS.forEach(function (o) { counts[o.status] = (counts[o.status] || 0) + 1; });
+        statusBreakdown.innerHTML = Object.keys(ADMIN_STATUS_LABELS).map(function (key) {
+          var count = counts[key] || 0;
+          return '<div class="admin-status-row"><span class="admin-status-dot" style="background-color:' + colors[key] + ';"></span><span class="admin-status-row-name">' + ADMIN_STATUS_LABELS[key] + '</span><span class="admin-status-row-count">' + count + '</span></div>';
+        }).join('');
+      }
+
+      // Recent orders
+      var recentOrdersBody = document.getElementById('recentOrdersBody');
+      if (recentOrdersBody) {
+        var recent = ADMIN_SAMPLE_ORDERS.slice(-5).reverse();
+        recentOrdersBody.innerHTML = !recent.length ? '<tr><td colspan="5" class="admin-table-empty">No orders yet.</td></tr>' : recent.map(function (o) {
+          return '<tr><td class="admin-cell-strong">' + hqEsc(o.id) + '</td><td>' + hqEsc(o.customer) + '</td><td>' + hqEsc(o.service) + '</td><td>' + formatPeso(o.total) + '</td><td>' + statusBadge(o.status) + '</td></tr>';
+        }).join('');
+      }
+    });
+  </script>
+
+  
+
+</body>
+</html>

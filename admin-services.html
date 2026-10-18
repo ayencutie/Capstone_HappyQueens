@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="client-side/js/api.js"></script>
+  <script src="client-side/js/admin-common.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services — Admin — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="client-side/css/styles.css">
+  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+  <div class="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div class="admin-sidebar-brand-text">
+          <strong>Happy Queen's</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <div class="admin-nav-label">Overview</div>
+        <a href="admin-dashboard.html" class="admin-nav-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+
+        <div class="admin-nav-label">Manage</div>
+        <a href="admin-orders.html" class="admin-nav-link"><i class="fa-solid fa-receipt"></i> Orders</a>
+        <a href="admin-customers.html" class="admin-nav-link"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="admin-inquiries.html" class="admin-nav-link"><i class="fa-solid fa-envelope-open-text"></i> Inquiries</a>
+        <a href="admin-services.html" class="admin-nav-link is-active"><i class="fa-solid fa-boxes-stacked"></i> Services</a>
+        <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
+
+        <div class="admin-nav-label">Store</div>
+        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        Logged in as <strong style="color:#fff;">Admin</strong>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Toggle menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <div class="admin-page-title" id="adminPageTitle">Services</div>
+            <div class="admin-page-subtitle" id="adminPageSubtitle">Manage what you offer and their base pricing.</div>
+          </div>
+        </div>
+
+        <div class="admin-topbar-right">
+          <div class="admin-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Quick search...">
+          </div>
+          <button type="button" class="admin-icon-btn" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <button type="button" class="account-trigger" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="admin-avatar">HQ</span>
+              <i class="fa-solid fa-chevron-down account-chevron"></i>
+            </button>
+            <div class="account-dropdown" id="accountDropdown" role="menu">
+              <a href="admin-dashboard.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+              <a href="#" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gear"></i> Account Settings</a>
+              <div class="account-dropdown-divider"></div>
+              <button type="button" class="account-dropdown-item account-dropdown-logout" id="logoutBtn" role="menuitem">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+        <div class="admin-panel" id="servicesListPanel">
+          <div class="admin-panel-header">
+            <span class="admin-panel-title">Service Catalog</span>
+            <button type="button" class="btn btn-filled" id="addServiceBtn" style="padding:9px 18px; font-size:13px;"><i class="fa-solid fa-plus"></i> Add Service</button>
+          </div>
+
+          <div class="admin-service-cards" id="servicesCardGrid"></div>
+        </div>
+
+        <!-- Service Manage view — opened from a service card's "Manage" link.
+             This is a copy of the design for reference only; it does not
+             touch the structure of each service's own template webpage
+             (admin-templates-<slug>.html), which stays completely separate. -->
+        <div class="admin-panel admin-service-detail" id="serviceDetailView" style="display:none;">
+          <a href="#" class="admin-detail-back" id="detailBackLink"><i class="fa-solid fa-arrow-left"></i> Back to Services</a>
+
+          <div class="admin-detail-header">
+            <div class="admin-detail-title-row">
+              <h2 id="detailServiceName">Service Name</h2>
+              <span class="admin-service-card-category admin-detail-category" id="detailServiceCategory">CATEGORY</span>
+            </div>
+            <div class="admin-detail-price" id="detailServicePrice">&#8369;0 / pc</div>
+          </div>
+
+          <div class="admin-detail-tabs" id="detailTabs">
+            <button type="button" class="admin-detail-tab" data-detail-tab="templates" id="detailTabBtnTemplates">Templates <span id="detailTabTemplatesCount">(0)</span></button>
+            <button type="button" class="admin-detail-tab" data-detail-tab="choices" id="detailTabBtnChoices">Choices <span id="detailTabChoicesCount">(0)</span></button>
+          <button type="button" class="admin-detail-tab" data-detail-tab="info" id="detailTabBtnInfo">Info Fields <span id="detailTabInfoCount">(0)</span></button>
+            <button type="button" class="admin-detail-tab" data-detail-tab="settings" id="detailTabBtnSettings">Settings</button>
+          </div>
+
+          <!-- Templates tab -->
+          <div class="admin-detail-panel" id="detailPanelTemplates">
+            <div class="admin-detail-panel-header">
+              <div>
+                <h3>Design Templates</h3>
+                <p>Customers will choose from these designs when placing an order.</p>
+              </div>
+              <div class="admin-detail-panel-actions">
+                <button type="button" class="btn btn-outline" id="detailManageOccasionsBtn"><i class="fa-solid fa-images"></i> Occasions</button>
+                <button type="button" class="btn btn-filled" id="detailUploadDesignsBtn"><i class="fa-solid fa-plus"></i> Upload Designs</button>
+              </div>
+            </div>
+
+            <div class="admin-occasion-tabs" id="detailOccasionTabs"></div>
+
+            <div class="admin-dropzone" id="detailDropzone">
+              <div class="admin-dropzone-icon"><i class="fa-solid fa-arrow-up"></i></div>
+              <div class="admin-dropzone-title">Drop design files here</div>
+              <div class="admin-dropzone-sub">PNG, JPG, PDF, SVG — up to 20 MB each</div>
+              <button type="button" class="btn btn-filled admin-dropzone-browse" id="detailBrowseFilesBtn">Browse Files</button>
+              <input type="file" id="detailFileInput" multiple accept=".png,.jpg,.jpeg,.pdf,.svg" style="display:none;">
+            </div>
+
+            <div class="admin-detail-template-grid" id="detailTemplateGrid"></div>
+          </div>
+
+          <!-- Choices tab -->
+          <div class="admin-detail-panel" id="detailPanelChoices" style="display:none;">
+            <div class="admin-detail-panel-header">
+              <div>
+                <h3>Order Options</h3>
+                <p>Define the variants customers can choose from (size, finish, color, etc.).</p>
+              </div>
+              <button type="button" class="btn btn-filled" id="addOptionGroupBtn"><i class="fa-solid fa-plus"></i> Add Option Group</button>
+            </div>
+
+            <div id="optionGroupsList"></div>
+          </div>
+
+          <!-- Settings tab -->
+          <div class="admin-detail-panel" id="detailPanelInfo" style="display:none;">
+          <div class="admin-detail-panel-header">
+            <div>
+              <h3>Info Fields</h3>
+              <p>What the customer must type before ordering (names, address, date...). It is shown on the design preview. Leave empty if this product needs no text. The first field is the biggest line on the design.</p>
+            </div>
+            <button type="button" class="btn btn-filled" id="addInfoFieldBtn"><i class="fa-solid fa-plus"></i> Add Field</button>
+          </div>
+          <div id="infoFieldsList"></div>
+        </div>
+
+        <div class="admin-detail-panel" id="detailPanelSettings" style="display:none;">
+            <h3 style="font-family:var(--font-heading); font-size:16.5px; margin-bottom:16px;">Service Settings</h3>
+
+            <div class="admin-settings-card">
+              <div class="admin-modal-field" style="margin-top:0;">
+                <label>Service Photo</label>
+                <div class="admin-image-upload">
+                  <div class="admin-image-upload-preview" id="detailSettingsImagePreview"><i class="fa-solid fa-image"></i></div>
+                  <div class="admin-image-upload-actions">
+                    <button type="button" class="btn btn-outline" id="detailSettingsImageBtn">Change Photo</button>
+                    <span class="admin-image-upload-hint">PNG or JPG, up to 5&nbsp;MB.</span>
+                    <input type="file" id="detailSettingsImageInput" accept="image/png,image/jpeg" style="display:none;">
+                  </div>
+                </div>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsName">Service Name</label>
+                <input type="text" id="detailSettingsName" class="admin-modal-input">
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsPrice">Base Price (&#8369;)</label>
+                <input type="text" id="detailSettingsPrice" class="admin-modal-input" placeholder="e.g. 150 or 150-200">
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsDesc">Short Description</label>
+                <input type="text" id="detailSettingsDesc" class="admin-modal-input" maxlength="160" placeholder="e.g. Custom cut &amp; sheet stickers">
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsOrderUrl">Order Page (optional)</label>
+                <input type="text" id="detailSettingsOrderUrl" class="admin-modal-input" placeholder="e.g. order-sticker.html (leave blank to use order.html)">
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsPreview">Preview type</label>
+                <select id="detailSettingsPreview"><option value="flat">Preview only (flat design)</option><option value="3d">3D preview</option></select>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsProduct">Product type (how it looks in 3D, and its back)</label>
+                <select id="detailSettingsProduct">
+                  <option value="paper">Paper card / print</option>
+                  <option value="photo">Photo paper print</option>
+                  <option value="sticker">Sticker</option>
+                  <option value="magnet">Fridge magnet (thick, dark magnetic back)</option>
+                  <option value="keychain">Keychain (acrylic with ring and chain)</option>
+                </select>
+              </div>
+              <div class="admin-modal-field" id="detailSettingsShapesWrap">
+                <label>3D shapes the customer can switch between</label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsShapeNoFold" checked> <span>No fold (single card)</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsShapeTwoFold"> <span>Two-fold (card that opens)</span></label>
+              </div>
+              <div class="admin-modal-field">
+                <label>Product size (width &times; height, any unit)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="detailSettingsRatioW" class="admin-modal-input" min="0.5" step="0.1" value="5"> <span>&times;</span>
+                  <input type="number" id="detailSettingsRatioH" class="admin-modal-input" min="0.5" step="0.1" value="7">
+                </div>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsTextPos">Where the info text goes</label>
+                <select id="detailSettingsTextPos"><option value="center">Centered on the design</option><option value="bottom">Caption below the design (e.g. a name under a 1x1 photo)</option></select>
+              </div>
+              <div class="admin-modal-field">
+                <label>Cut shapes (for keychains, magnets...)</label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutCircle"> <span>Circle</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutTriangle"> <span>Triangle</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutSquare"> <span>Square</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutHeart"> <span>Heart</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutPhoto"> <span>Follow the photo (its background is removed)</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsCutHole"> <span>Has a keyring hole</span></label>
+                <p class="admin-modal-hint">Leave all unticked for products that are not cut into a shape. The customer picks one of the ticked shapes when ordering.</p>
+              </div>
+              <div class="admin-modal-field admin-modal-field-checkbox">
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsNeedsInfo"> <span>Ask the customer to type info for the design (name, address, date...). Turn this off for things like a plain photo print.</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsAI"> <span>Customers can type an AI design prompt (only when no template is picked)</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsUpload"> <span>Customers can upload their own design</span></label>
+              </div>
+              <div class="admin-modal-field admin-modal-field-checkbox">
+                <label class="admin-checkbox-label">
+                  <input type="checkbox" id="detailSettingsNeedsTemplate">
+                  <span>This service needs a design/template</span>
+                </label>
+              </div>
+              <div class="admin-modal-field admin-modal-field-checkbox">
+                <label class="admin-checkbox-label">
+                  <input type="checkbox" id="detailSettingsActive">
+                  <span>Show this service on the website</span>
+                </label>
+              </div>
+              <button type="button" class="btn btn-filled admin-settings-save" id="detailSettingsSaveBtn">Save Changes</button>
+            </div>
+
+            <div class="admin-danger-zone">
+              <strong>Danger Zone</strong>
+              <p>Deleting this service is permanent and cannot be undone.</p>
+              <button type="button" class="btn btn-outline admin-danger-btn" id="detailDeleteServiceBtn">Delete Service</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Service modal -->
+        <div class="admin-modal-overlay" id="addServiceModal">
+          <div class="admin-modal">
+            <button type="button" class="admin-modal-close" id="addServiceModalClose" aria-label="Close">&times;</button>
+            <h3>Add Service</h3>
+            <p class="admin-modal-sub">You can upload the actual designs afterward from this service's Template Manager.</p>
+
+            <div class="admin-modal-field">
+              <label for="newServiceName">Service Name</label>
+              <input type="text" id="newServiceName" class="admin-modal-input" placeholder="e.g. Photo Magnet">
+            </div>
+            <div class="admin-modal-field">
+              <label for="newServicePrice">Base Price (&#8369;)</label>
+              <input type="text" inputmode="decimal" id="newServicePrice" class="admin-modal-input" placeholder="e.g. 150 or 150-200">
+            </div>
+            <div class="admin-modal-field">
+              <label for="newServiceDesc">Short Description</label>
+              <input type="text" id="newServiceDesc" class="admin-modal-input" maxlength="160" placeholder="e.g. Custom cut &amp; sheet stickers">
+            </div>
+            <div class="admin-modal-field">
+              <label for="newServiceOrderUrl">Order Page (optional)</label>
+              <input type="text" id="newServiceOrderUrl" class="admin-modal-input" placeholder="e.g. order-sticker.html (leave blank to use order.html)">
+            </div>
+            <div class="admin-modal-field">
+                <label for="newServicePreview">Preview type</label>
+                <select id="newServicePreview"><option value="flat">Preview only (flat design)</option><option value="3d">3D preview</option></select>
+              </div>
+              <div class="admin-modal-field">
+                <label for="newServiceProduct">Product type (how it looks in 3D, and its back)</label>
+                <select id="newServiceProduct">
+                  <option value="paper">Paper card / print</option>
+                  <option value="photo">Photo paper print</option>
+                  <option value="sticker">Sticker</option>
+                  <option value="magnet">Fridge magnet (thick, dark magnetic back)</option>
+                  <option value="keychain">Keychain (acrylic with ring and chain)</option>
+                </select>
+              </div>
+              <div class="admin-modal-field" id="newServiceShapesWrap">
+                <label>3D shapes the customer can switch between</label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="newServiceShapeNoFold" checked> <span>No fold (single card)</span></label>
+                <label class="admin-checkbox-label"><input type="checkbox" id="newServiceShapeTwoFold"> <span>Two-fold (card that opens)</span></label>
+              </div>
+              <div class="admin-modal-field">
+                <label>Product size (width &times; height, any unit)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="newServiceRatioW" class="admin-modal-input" min="0.5" step="0.1" value="5"> <span>&times;</span>
+                  <input type="number" id="newServiceRatioH" class="admin-modal-input" min="0.5" step="0.1" value="7">
+                </div>
+              </div>
+              <div class="admin-modal-field">
+                <label class="admin-checkbox-label"><input type="checkbox" id="newServiceNeedsInfo" checked> <span>Ask the customer to type info (name, address, date...)</span></label>
+              </div>
+
+            <div class="admin-modal-field">
+              <label>Service Photo</label>
+              <div class="admin-image-upload">
+                <div class="admin-image-upload-preview" id="newServiceImagePreview"><i class="fa-solid fa-image"></i></div>
+                <div class="admin-image-upload-actions">
+                  <button type="button" class="btn btn-outline" id="newServiceImageBtn">Choose Photo</button>
+                  <span class="admin-image-upload-hint">PNG or JPG, up to 5&nbsp;MB. This is what shows on the service card.</span>
+                  <input type="file" id="newServiceImageInput" accept="image/png,image/jpeg" style="display:none;">
+                </div>
+              </div>
+            </div>
+            <div class="admin-modal-field admin-modal-field-checkbox">
+              <label class="admin-checkbox-label">
+                <input type="checkbox" id="newServiceNeedsTemplate" checked>
+                <span>This service needs a design/template</span>
+              </label>
+              <p class="admin-modal-hint">Check this for services where customers pick a visual design (layouts, colors, etc). Uncheck it for services that just need text options instead — like paper size — you can add those as "Choices" after saving.</p>
+            </div>
+
+            <div class="admin-modal-field" id="newServiceOccasionsWrapper">
+              <label>Template Occasions</label>
+              <p class="admin-modal-hint">What kind of designs will customers choose from for this service — e.g. Wedding, Birthday, Corporate. These become the tabs on this service's Template Manager, and every design you upload later gets filed under one of them. Leave blank to use the default set (Wedding, Birthday, Debut, Christening, Anniversary, Corporate, Other).</p>
+              <div class="admin-chip-list" id="newServiceOccasionsChipList"></div>
+              <div class="admin-modal-field admin-chip-input-row">
+                <input type="text" id="newServiceOccasionInput" class="admin-modal-input" placeholder="e.g. Wedding">
+                <button type="button" class="btn btn-outline" id="addNewServiceOccasionBtn">Add</button>
+              </div>
+            </div>
+
+            <div class="admin-modal-actions">
+              <button type="button" class="btn btn-outline" id="addServiceCancel">Cancel</button>
+              <button type="button" class="btn btn-filled" id="addServiceSubmit">Add Service</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage Occasions modal -->
+        <div class="admin-modal-overlay" id="occasionsModal">
+          <div class="admin-modal">
+            <button type="button" class="admin-modal-close" id="occasionsModalClose" aria-label="Close">&times;</button>
+            <h3>Template Occasions</h3>
+            <p class="admin-modal-sub" id="occasionsModalSub">What kind of designs customers can choose from for this service, e.g. Wedding, Birthday, Corporate.</p>
+
+            <div class="admin-chip-list" id="occasionsChipList"></div>
+
+            <div class="admin-modal-field admin-chip-input-row">
+              <input type="text" id="newOccasionInput" class="admin-modal-input" placeholder="e.g. Wedding">
+              <button type="button" class="btn btn-outline" id="addOccasionBtn">Add</button>
+            </div>
+
+            <div class="admin-modal-actions">
+              <button type="button" class="btn btn-filled" id="occasionsModalDone">Done</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+  <script src="client-side/js/admin-services.js"></script>
+
+  
+
+</body>
+</html>

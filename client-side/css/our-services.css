@@ -1,0 +1,207 @@
+/* ==========================================================================
+   Our Services page — extra styles (uses variables from styles.css)
+   ========================================================================== */
+
+/* --- Page banner (shared pattern with about-us) ---------------------------- */
+.page-banner {
+  padding: 56px 0 48px;
+  text-align: center;
+  background-color: var(--color-bg-soft);
+}
+
+.page-banner h1 {
+  margin-top: 16px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 42px;
+  color: var(--color-text);
+}
+
+.page-banner p {
+  max-width: 520px;
+  margin: 14px auto 0;
+  font-size: 16px;
+  color: var(--color-text-light);
+}
+
+/* --- Section intros --------------------------------------------------------- */
+.section-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.section-intro {
+  max-width: 620px;
+  margin: 0 auto 40px;
+  text-align: center;
+}
+
+.section-intro h2 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.section-intro p {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--color-text-light);
+}
+
+/* --- Services overview grid -------------------------------------------------- */
+.services-overview {
+  padding: 64px 0 24px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: center;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 32px rgba(22, 59, 74, 0.14);
+}
+
+/* --- Service card image (replaces the old icon) ---------------------------- */
+.service-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--color-bg-soft);
+}
+
+.service-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.service-card:hover .service-image {
+  transform: scale(1.06);
+}
+
+.service-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px 18px 22px;
+}
+
+.service-card h3 {
+  font-family: var(--font-heading);
+  font-size: 16.5px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.service-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+/* --- Order Now button -------------------------------------------------------- */
+.btn-order-now {
+  display: inline-block;
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: transparent;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-order-now:hover {
+  color: var(--color-white);
+  background-color: var(--color-primary);
+}
+
+
+
+/* --- Responsive --------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .services-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .order-form {
+    grid-template-columns: 1fr;
+  }
+
+  .order-form-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page-banner h1 {
+    font-size: 32px;
+  }
+
+  .order-summary {
+    padding: 18px 20px;
+  }
+
+  .order-body {
+    padding: 4px 20px 26px;
+  }
+}
+
+/* --- Services loaded from the database ------------------------------------------ */
+.service-image-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  color: var(--color-text-light);
+  opacity: 0.55;
+}
+
+.services-message {
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.service-price {
+  margin: 8px 0 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text);
+}

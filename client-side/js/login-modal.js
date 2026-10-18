@@ -6,7 +6,10 @@ var HQ_CUSTOMER_HOME = 'homepage.html';             // logged-in customer homepa
 async function hqLogin(identifier, password) {
   const r = await hqApi('login', { identifier: identifier, password: password });
   if (!r.ok) { alert(r.error || 'Login failed.'); return false; }
-  window.location.href = r.role === 'admin' ? HQ_ADMIN_HOME : HQ_CUSTOMER_HOME;
+  var next = null;
+  try { next = sessionStorage.getItem('hq_next'); sessionStorage.removeItem('hq_next'); } catch (e) {}
+  if (!/^[A-Za-z0-9._-]+\.html(\?[A-Za-z0-9=&_.-]*)?$/.test(next || '')) next = null;
+  window.location.href = r.role === 'admin' ? HQ_ADMIN_HOME : (next || HQ_CUSTOMER_HOME);
   return true;
 }
 

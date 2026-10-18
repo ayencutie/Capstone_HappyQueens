@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="client-side/js/api.js"></script>
+  <script src="client-side/js/admin-common.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders — Admin — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="client-side/css/styles.css">
+  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+  <div class="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand">
+        <div class="logo-mark">
+          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+        </div>
+        <div class="admin-sidebar-brand-text">
+          <strong>Happy Queen's</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <div class="admin-nav-label">Overview</div>
+        <a href="admin-dashboard.html" class="admin-nav-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+
+        <div class="admin-nav-label">Manage</div>
+        <a href="admin-orders.html" class="admin-nav-link is-active"><i class="fa-solid fa-receipt"></i> Orders</a>
+        <a href="admin-customers.html" class="admin-nav-link"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="admin-inquiries.html" class="admin-nav-link"><i class="fa-solid fa-envelope-open-text"></i> Inquiries</a>
+        <a href="admin-services.html" class="admin-nav-link"><i class="fa-solid fa-boxes-stacked"></i> Services</a>
+        <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
+
+        <div class="admin-nav-label">Store</div>
+        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        Logged in as <strong style="color:#fff;">Admin</strong>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Toggle menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <div class="admin-page-title">Orders</div>
+            <div class="admin-page-subtitle">View and update every customer order.</div>
+          </div>
+        </div>
+
+        <div class="admin-topbar-right">
+          <div class="admin-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Quick search...">
+          </div>
+          <button type="button" class="admin-icon-btn" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <button type="button" class="account-trigger" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="admin-avatar">HQ</span>
+              <i class="fa-solid fa-chevron-down account-chevron"></i>
+            </button>
+            <div class="account-dropdown" id="accountDropdown" role="menu">
+              <a href="admin-dashboard.html" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+              <a href="#" class="account-dropdown-item" role="menuitem"><i class="fa-solid fa-gear"></i> Account Settings</a>
+              <div class="account-dropdown-divider"></div>
+              <button type="button" class="account-dropdown-item account-dropdown-logout" id="logoutBtn" role="menuitem">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+        <div class="admin-panel">
+          <div class="admin-status-tabs" id="ordersStatusTabs">
+            <button type="button" class="admin-status-tab" data-status="all">All <span class="admin-status-tab-count" id="tabCount-all"></span></button>
+            <button type="button" class="admin-status-tab is-active" data-status="pending">Pending <span class="admin-status-tab-count" id="tabCount-pending"></span></button>
+            <button type="button" class="admin-status-tab" data-status="in-design">In Design <span class="admin-status-tab-count" id="tabCount-in-design"></span></button>
+            <button type="button" class="admin-status-tab" data-status="printing">Printing <span class="admin-status-tab-count" id="tabCount-printing"></span></button>
+            <button type="button" class="admin-status-tab" data-status="packing">Packing <span class="admin-status-tab-count" id="tabCount-packing"></span></button>
+            <button type="button" class="admin-status-tab" data-status="out-for-delivery">Out for Delivery <span class="admin-status-tab-count" id="tabCount-out-for-delivery"></span></button>
+            <button type="button" class="admin-status-tab" data-status="completed">Completed <span class="admin-status-tab-count" id="tabCount-completed"></span></button>
+            <button type="button" class="admin-status-tab" data-status="cancelled">Cancelled <span class="admin-status-tab-count" id="tabCount-cancelled"></span></button>
+          </div>
+
+          <div class="admin-table-controls">
+            <input type="text" id="ordersSearch" class="admin-inline-search" placeholder="Search order ID, customer, or service...">
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>View</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Order detail modal -->
+        <div class="admin-modal-overlay" id="orderModal">
+          <div class="admin-modal">
+            <button type="button" class="admin-modal-close" id="orderModalClose" aria-label="Close">&times;</button>
+            <div id="orderModalBody"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Printable order slip (hidden on screen, shown only when printing) -->
+      <div id="printOrderSlip" class="print-order-slip"></div>
+
+    </div>
+  </div>
+
+  <script>
+    var ADMIN_STATUS_LABELS = {
+      'pending': 'Pending', 'in-design': 'In Design', 'printing': 'Printing',
+      'packing': 'Packing', 'out-for-delivery': 'Out for Delivery',
+      'completed': 'Completed', 'cancelled': 'Cancelled'
+    };
+    function statusBadge(status) {
+      return '<span class="status-badge status-' + status + '">' + (ADMIN_STATUS_LABELS[status] || status) + '</span>';
+    }
+    function payBadge(payment) {
+      var cls = 'pay-' + String(payment).replace(/\s+/g, '-').split('-')[0];
+      return '<span class="pay-badge ' + cls + '">' + hqEsc(payment) + '</span>';
+    }
+
+    function paySub(o) {
+      if (o.status === 'cancelled' && o.amountPaid > 0) return { refunded: 'Refunded', processing: 'Refund processing', manual: 'REFUND NEEDED', none: 'Refund not started' }[o.refundStatus] || '';
+      return { paid: 'Paid in full', partial: 'Down payment paid', unpaid: 'Not paid yet' }[o.payStatus] || '';
+    }
+    function refundHtml(o) {
+      if (o.status !== 'cancelled' || o.amountPaid <= 0) return '';
+      var label = { refunded: 'Refunded ' + hqPeso(o.refundAmount), processing: 'Processing at PayMongo (' + hqPeso(o.refundAmount) + ')', manual: 'Needs a manual refund of ' + hqPeso(o.amountPaid), none: 'Not started (' + hqPeso(o.amountPaid) + ')' }[o.refundStatus] || '';
+      var out = '<div class="admin-modal-row"><span>Refund</span><span>' + label + '</span></div>';
+      if (o.refundNote && o.refundStatus === 'manual') out += '<p class="admin-modal-hint">PayMongo said: ' + hqEsc(o.refundNote) + '</p>';
+      if (o.refundStatus !== 'refunded') out += '<div class="admin-modal-field" style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-outline" id="retryRefundBtn">Retry refund via PayMongo</button><button type="button" class="btn btn-outline" id="doneRefundBtn">I refunded it myself</button></div>';
+      return out;
+    }
+    function infoHtml(order) {
+      var d = order.details || {}, out = '';
+      var shapes = { 'no-fold': 'No fold', 'two-fold': 'Two-fold' };
+      if (d.orientation) out += '<div class="admin-modal-row"><span>Orientation</span><span>' + (d.orientation === 'landscape' ? 'Landscape' : 'Portrait') + '</span></div>';
+      if (d.cutShape) out += '<div class="admin-modal-row"><span>Cut shape</span><span>' + ({ circle: 'Circle', triangle: 'Triangle', square: 'Square', heart: 'Heart', photo: 'Follow the photo (background removed)' }[d.cutShape] || d.cutShape) + '</span></div>';
+      if (d.shape && (d.shape === 'two-fold')) out += '<div class="admin-modal-row"><span>Card type</span><span>' + shapes[d.shape] + '</span></div>';
+      (d.info || []).forEach(function (r) { out += '<div class="admin-modal-row"><span>' + hqEsc(r.label) + '</span><span style="white-space:pre-line;text-align:right;">' + hqEsc(r.value) + '</span></div>'; });
+      var des = d.design || {};
+      var src = { template: 'Template', upload: 'Customer upload', ai: 'AI prompt: "' + hqEsc(des.prompt || '') + '"', none: 'None' }[des.source || 'none'];
+      out += '<div class="admin-modal-row"><span>Design</span><span>' + src + '</span></div>';
+      if (order.designImage) out += '<div class="admin-modal-field"><label>Design preview</label><a href="' + hqEsc(hqAsset(order.designImage)) + '" target="_blank" rel="noopener"><img src="' + hqEsc(hqAsset(order.designImage)) + '" alt="Design" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid #dcecec;"></a></div>';
+      if (des.file && des.source === 'upload') out += '<div class="admin-modal-row"><span>Uploaded file</span><span><a href="' + hqEsc(hqAsset(des.file)) + '" target="_blank" rel="noopener">Open original</a></span></div>';
+      return out;
+    }
+
+    hqOnReady(function () {
+      var ORDERS = [];
+      var sidebar = document.getElementById('adminSidebar');
+      var sidebarToggle = document.getElementById('adminSidebarToggle');
+      if (sidebar && sidebarToggle) sidebarToggle.addEventListener('click', function () { sidebar.classList.toggle('is-open'); });
+
+      var ordersTableBody = document.getElementById('ordersTableBody');
+      var searchInput = document.getElementById('ordersSearch');
+      var statusTabs = document.getElementById('ordersStatusTabs');
+      var modal = document.getElementById('orderModal');
+      var modalClose = document.getElementById('orderModalClose');
+      var modalBody = document.getElementById('orderModalBody');
+      var currentStatus = 'pending';
+
+      function updateTabCounts() {
+        var counts = { all: ORDERS.length };
+        Object.keys(ADMIN_STATUS_LABELS).forEach(function (k) { counts[k] = 0; });
+        ORDERS.forEach(function (o) { counts[o.status] = (counts[o.status] || 0) + 1; });
+        Object.keys(counts).forEach(function (key) {
+          var el = document.getElementById('tabCount-' + key);
+          if (el) el.textContent = counts[key];
+        });
+      }
+
+      function renderOrders() {
+        var query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+        var filtered = ORDERS.filter(function (o) {
+          var okStatus = currentStatus === 'all' || o.status === currentStatus;
+          var okQuery = !query || String(o.id).toLowerCase().includes(query) || o.customer.toLowerCase().includes(query) || o.service.toLowerCase().includes(query);
+          return okStatus && okQuery;
+        });
+        updateTabCounts();
+        if (!filtered.length) {
+          ordersTableBody.innerHTML = '<tr><td colspan="7" class="admin-table-empty">' + (ORDERS.length ? 'No orders match your search/filter.' : 'No orders yet. They will appear here when customers place them.') + '</td></tr>';
+          return;
+        }
+        ordersTableBody.innerHTML = filtered.map(function (o) {
+          return '<tr>' +
+            '<td class="admin-cell-strong">' + hqEsc(o.id) + '</td>' +
+            '<td>' + hqEsc(o.customer) + '</td>' +
+            '<td>' + hqEsc(o.service) + '<span class="admin-cell-sub">Qty: ' + o.qty + '</span></td>' +
+            '<td>' + hqPeso(o.total) + '</td>' +
+            '<td>' + payBadge(o.payment) + '<span class="admin-cell-sub">' + paySub(o) + '</span></td>' +
+            '<td>' + statusBadge(o.status) + '</td>' +
+            '<td><button type="button" class="admin-row-action view-order-btn" data-db-id="' + o.dbId + '" aria-label="View order"><i class="fa-solid fa-eye"></i></button></td>' +
+          '</tr>';
+        }).join('');
+        ordersTableBody.querySelectorAll('.view-order-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () { openOrderModal(parseInt(btn.dataset.dbId, 10)); });
+        });
+      }
+
+      function openOrderModal(dbId) {
+        var order = ORDERS.find(function (o) { return o.dbId === dbId; });
+        if (!order) return;
+        var isLocked = order.status === 'cancelled' || order.status === 'completed';
+        var statusField = isLocked
+          ? '<div class="admin-modal-field"><label>Status</label>' + statusBadge(order.status) +
+            '<p class="admin-modal-hint">' + (order.status === 'cancelled' ? 'This order was cancelled.' : 'This order is completed and locked.') + '</p></div>'
+          : '<div class="admin-modal-field"><label for="orderStatusSelect">Update Status</label><select id="orderStatusSelect">' +
+              Object.keys(ADMIN_STATUS_LABELS).filter(function (k) { return k !== 'cancelled'; }).map(function (k) {
+                return '<option value="' + k + '"' + (k === order.status ? ' selected' : '') + '>' + ADMIN_STATUS_LABELS[k] + '</option>';
+              }).join('') + '</select></div>';
+
+        var picks = (order.details && order.details.selections || []).map(function (p) {
+          return '<div class="admin-modal-row"><span>' + hqEsc(p.group) + '</span><span>' + hqEsc(p.option) + '</span></div>';
+        }).join('');
+        var notes = order.details && order.details.notes ? '<div class="admin-modal-row"><span>Notes</span><span>' + hqEsc(order.details.notes) + '</span></div>' : '';
+
+        modalBody.innerHTML =
+          '<h3>' + hqEsc(order.id) + '</h3>' +
+          '<p class="admin-modal-sub">Placed on ' + new Date(order.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + '</p>' +
+          '<div class="admin-modal-row"><span>Customer</span><span>' + hqEsc(order.customer) + '</span></div>' +
+          '<div class="admin-modal-row"><span>Service</span><span>' + hqEsc(order.service) + '</span></div>' +
+          '<div class="admin-modal-row"><span>Quantity</span><span>' + order.qty + '</span></div>' + picks + notes +
+          '<div class="admin-modal-row"><span>Total</span><span>' + hqPeso(order.total) + '</span></div>' +
+          '<div class="admin-modal-row"><span>Payment</span><span>' + payBadge(order.payment) + '</span></div>' +
+          '<div class="admin-modal-row"><span>Paid so far</span><span>' + hqPeso(order.amountPaid) + ' (' + ({ paid: 'paid in full', partial: 'down payment', unpaid: 'unpaid' }[order.payStatus] || '') + ')</span></div>' +
+          '<div class="admin-modal-row"><span>Balance to collect</span><span>' + hqPeso(order.status === 'cancelled' ? 0 : Math.max(0, order.total - order.amountPaid)) + '</span></div>' +
+          refundHtml(order) +
+          (order.status !== 'cancelled' && order.payStatus !== 'paid' && order.payStatus !== 'unpaid' ? '<div class="admin-modal-field"><button type="button" class="btn btn-outline" id="markPaidBtn">Mark balance as paid (cash on pickup)</button></div>' : '') +
+          infoHtml(order) +
+          statusField +
+          '<div class="admin-modal-actions"><button type="button" class="btn btn-outline" id="orderModalCancel">Close</button></div>';
+
+        modal.classList.add('is-open');
+        var sel = document.getElementById('orderStatusSelect');
+        if (sel) sel.addEventListener('change', async function () {
+          var previous = order.status;
+          var r = await hqAdmin('order_status', { id: order.dbId, status: this.value });
+          if (!r.ok) { alert(r.error || 'Could not update the status.'); this.value = previous; return; }
+          order.status = this.value;
+          renderOrders();
+        });
+        document.getElementById('orderModalCancel').addEventListener('click', closeOrderModal);
+        var rr = document.getElementById('retryRefundBtn'), rd = document.getElementById('doneRefundBtn');
+        if (rr) rr.addEventListener('click', async function () {
+          rr.disabled = true;
+          var r = await hqAdmin('order_refund_retry', { id: order.dbId });
+          if (!r.ok) { alert(r.error || 'Could not retry.'); rr.disabled = false; return; }
+          order.refundStatus = r.refundStatus; order.refundNote = r.note; order.refundAmount = order.amountPaid;
+          renderOrders(); openOrderModal(order.dbId);
+          if (r.refundStatus === 'manual') alert('PayMongo could not do this refund automatically: ' + (r.note || '') + '\nRefund it in the PayMongo dashboard, then click "I refunded it myself".');
+        });
+        if (rd) rd.addEventListener('click', async function () {
+          if (!confirm('Mark this refund as done? Only do this after you really sent the money back.')) return;
+          var r = await hqAdmin('order_refund_done', { id: order.dbId });
+          if (!r.ok) return alert(r.error || 'Could not update.');
+          order.refundStatus = 'refunded'; order.refundAmount = order.amountPaid; renderOrders(); openOrderModal(order.dbId);
+        });
+        var mp = document.getElementById('markPaidBtn');
+        if (mp) mp.addEventListener('click', async function () {
+          if (!confirm('Mark the full amount of ' + order.id + ' as paid?')) return;
+          var r = await hqAdmin('order_mark_paid', { id: order.dbId });
+          if (!r.ok) return alert(r.error || 'Could not update.');
+          order.amountPaid = order.total; order.payStatus = 'paid'; renderOrders(); openOrderModal(order.dbId);
+        });
+      }
+
+      function closeOrderModal() { modal.classList.remove('is-open'); }
+      modalClose.addEventListener('click', closeOrderModal);
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeOrderModal(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeOrderModal(); });
+      searchInput.addEventListener('input', renderOrders);
+      statusTabs.querySelectorAll('.admin-status-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          currentStatus = tab.dataset.status;
+          statusTabs.querySelectorAll('.admin-status-tab').forEach(function (t) { t.classList.remove('is-active'); });
+          tab.classList.add('is-active');
+          renderOrders();
+        });
+      });
+
+      hqAdmin('orders').then(function (r) {
+        if (!r.ok) { ordersTableBody.innerHTML = '<tr><td colspan="7" class="admin-table-empty">' + hqEsc(r.error || 'Could not load orders.') + '</td></tr>'; return; }
+        ORDERS = r.orders; renderOrders();
+      });
+    });
+  </script>
+
+  
+
+</body>
+</html>

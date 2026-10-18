@@ -1,29 +1,97 @@
+-- Optional: manual import for phpMyAdmin. (database/setup.php does the same, and also adds the starter services.)
 CREATE DATABASE IF NOT EXISTS happyqueens CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE happyqueens;
 
 CREATE TABLE IF NOT EXISTS users (
-  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  first_name      VARCHAR(60)  NOT NULL,
-  last_name       VARCHAR(60)  NOT NULL,
-  contact_no      VARCHAR(15)  NOT NULL UNIQUE,
-  email           VARCHAR(190) NOT NULL UNIQUE,
-  password_hash   VARCHAR(255) NULL,
-  role            ENUM('customer','admin') NOT NULL DEFAULT 'customer',
-  is_verified     TINYINT(1)   NOT NULL DEFAULT 0,
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(60) NOT NULL, last_name VARCHAR(60) NOT NULL,
+  contact_no VARCHAR(15) NOT NULL UNIQUE, email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NULL,
+  role ENUM('customer','admin') NOT NULL DEFAULT 'customer',
+  is_verified TINYINT(1) NOT NULL DEFAULT 0,
   failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  locked_until    INT UNSIGNED NOT NULL DEFAULT 0,
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+  locked_until INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS otp_codes (
-  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id    INT UNSIGNED NOT NULL,
-  purpose    ENUM('register','reset') NOT NULL,
-  code_hash  VARCHAR(255) NOT NULL,
-  attempts   TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  used       TINYINT(1) NOT NULL DEFAULT 0,
-  created_at INT UNSIGNED NOT NULL,
-  expires_at INT UNSIGNED NOT NULL,
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  purpose ENUM('register','reset') NOT NULL,
+  code_hash VARCHAR(255) NOT NULL,
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  used TINYINT(1) NOT NULL DEFAULT 0,
+  created_at INT UNSIGNED NOT NULL, expires_at INT UNSIGNED NOT NULL,
   INDEX (user_id, purpose),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS services (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(80) NOT NULL,
+  description VARCHAR(160) NOT NULL DEFAULT '',
+  price_text VARCHAR(40) NOT NULL DEFAULT '',
+  image_path VARCHAR(255) NULL,
+  order_url VARCHAR(190) NOT NULL DEFAULT '',
+  needs_template TINYINT(1) NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  occasions TEXT NULL, choices MEDIUMTEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  preview_mode VARCHAR(8) NOT NULL DEFAULT 'flat',
+  shapes VARCHAR(80) NOT NULL DEFAULT '["no-fold"]',
+  ratio_w DECIMAL(6,2) NOT NULL DEFAULT 5, ratio_h DECIMAL(6,2) NOT NULL DEFAULT 7,
+  text_position VARCHAR(8) NOT NULL DEFAULT 'center',
+  ai_enabled TINYINT(1) NOT NULL DEFAULT 1, upload_enabled TINYINT(1) NOT NULL DEFAULT 1,
+  info_fields MEDIUMTEXT NULL,
+  needs_info TINYINT(1) NOT NULL DEFAULT 1,
+  cut_shapes VARCHAR(120) NOT NULL DEFAULT '[]',
+  cut_hole TINYINT(1) NOT NULL DEFAULT 0,
+  product_type VARCHAR(10) NOT NULL DEFAULT 'paper'
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS templates (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  service_id INT UNSIGNED NOT NULL,
+  occasion VARCHAR(60) NOT NULL DEFAULT 'Other',
+  file_path VARCHAR(255) NOT NULL, original_name VARCHAR(190) NOT NULL, mime VARCHAR(60) NOT NULL,
+  size_bytes INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX (service_id),
+  FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_code VARCHAR(20) NULL UNIQUE,
+  user_id INT UNSIGNED NULL, service_id INT UNSIGNED NULL,
+  service_name VARCHAR(80) NOT NULL,
+  qty INT UNSIGNED NOT NULL DEFAULT 1,
+  total DECIMAL(10,2) NOT NULL DEFAULT 0,
+  payment VARCHAR(30) NOT NULL DEFAULT 'Cash',
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  details MEDIUMTEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  payment_status VARCHAR(10) NOT NULL DEFAULT 'unpaid',
+  pay_option VARCHAR(6) NOT NULL DEFAULT 'down',
+  amount_due DECIMAL(10,2) NOT NULL DEFAULT 0, amount_paid DECIMAL(10,2) NOT NULL DEFAULT 0,
+  checkout_session VARCHAR(80) NULL, design_image VARCHAR(255) NULL,
+  payment_id VARCHAR(40) NULL, paid_at DATETIME NULL,
+  refund_status VARCHAR(10) NOT NULL DEFAULT 'none', refund_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  refund_id VARCHAR(40) NULL, refund_note VARCHAR(190) NULL,
+  INDEX (status),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS inquiries (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NULL,
+  name VARCHAR(80) NOT NULL, contact VARCHAR(80) NOT NULL, service_name VARCHAR(80) NOT NULL,
+  qty INT UNSIGNED NOT NULL DEFAULT 1,
+  details TEXT NULL, files TEXT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'new',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX (status),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;

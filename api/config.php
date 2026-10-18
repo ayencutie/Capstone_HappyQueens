@@ -21,6 +21,18 @@ cfg_default('MAIL_PASS', '');               // Gmail App Password
 cfg_default('MAIL_FROM_NAME', "Happy Queen's Crafty House");
 cfg_default('MAIL_VERIFY_SSL', true);
 
+// Online payments (PayMongo: GCash + PayMaya)
+cfg_default('PAYMONGO_SECRET', '');         // sk_test_... (testing) or sk_live_...
+cfg_default('DOWNPAYMENT_PERCENT', 50);
+
+// AI design suggestions (optional - without a key the built-in designer is used)
+cfg_default('ANTHROPIC_API_KEY', '');
+cfg_default('AI_MODEL', 'claude-sonnet-5-5');
+
+// Background removal for photo keychains / magnets: rembg (Python) installed on this computer.
+cfg_default('REMBG_PYTHON', 'C:\\rembg-env\\Scripts\\python.exe');
+cfg_default('REMBG_SCRIPT', __DIR__ . '/../tools/remove_bg.py');
+
 cfg_default('OTP_TTL', 600);                // code valid for 10 minutes
 cfg_default('OTP_MAX_ATTEMPTS', 5);         // wrong guesses allowed per code
 cfg_default('OTP_RESEND_WAIT', 30);         // seconds between resends

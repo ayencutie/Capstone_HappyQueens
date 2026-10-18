@@ -1,0 +1,8 @@
+# Uploaded files can be viewed, but never executed as code.
+php_flag engine off
+RemoveHandler .php .phtml .php3 .php4 .php5 .phps
+Options -Indexes
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+</IfModule>
