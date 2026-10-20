@@ -14,10 +14,18 @@ hqOnReady(function () {
   var saveTimer = null;
 
   // ---------- small helpers ----------
-  function priceHtml(p) {
+  function priceHtml(p, from, unit) {
     p = (p || '').trim();
+    if (!p && from) return 'From &#8369;' + esc(from) + '<span> / ' + esc(unit || 'pc') + '</span>';
     if (!p) return '<span>No price set</span>';
-    return /\d/.test(p) ? '&#8369;' + esc(p) + '<span> / pc</span>' : esc(p);
+    return /\d/.test(p) ? '&#8369;' + esc(p) + '<span> / ' + esc(unit || 'pc') + '</span>' : esc(p);
+  }
+  function uid() { return 'x' + Math.random().toString(36).slice(2, 9); }
+  function normalizeService(s) {
+    s.priceMatrix = s.priceMatrix || { groups: [], prices: {} };
+    if (Array.isArray(s.priceMatrix.prices) || !s.priceMatrix.prices) s.priceMatrix.prices = {};
+    s.priceMatrix.groups = s.priceMatrix.groups || [];
+    (s.choices || []).forEach(function (g) { if (!g.id) g.id = uid(); g.options.forEach(function (o) { if (!o.id) o.id = uid(); }); });
   }
   function toast(msg) { alert(msg); }
   function openModal(id) { $(id).classList.add('is-open'); }
@@ -27,7 +35,7 @@ hqOnReady(function () {
   async function loadServices() {
     var r = await hqAdmin('services');
     if (!r.ok) { $('servicesCardGrid').innerHTML = '<div class="admin-option-groups-empty">' + esc(r.error || 'Could not load services.') + '</div>'; return; }
-    services = r.services;
+    services = r.services; services.forEach(normalizeService);
     renderCards();
     if (current) { current = byId(current.id); if (current) renderDetail(); else showList(); }
   }
@@ -45,7 +53,7 @@ hqOnReady(function () {
         '<div class="admin-service-card-body">' +
           '<span class="admin-service-card-category">' + (s.needsTemplate ? 'Design service' : 'Options only') + (s.previewMode === '3d' ? ' \u00B7 3D' : '') + '</span>' +
           '<h3>' + esc(s.name) + '</h3>' +
-          '<div class="admin-service-card-price">' + priceHtml(s.priceText) + '</div></div>' +
+          '<div class="admin-service-card-price">' + priceHtml(s.priceText, s.fromPrice, s.unitLabel) + '</div></div>' +
         '<div class="admin-service-card-footer">' +
           '<div class="admin-service-template-count"><i class="fa-solid fa-images"></i> ' + (s.needsTemplate ? s.templateCount + ' templates' : 'No templates') + '</div>' +
           '<div class="admin-service-card-actions"><button type="button" class="btn btn-outline" data-manage="' + s.id + '" style="padding:6px 14px;font-size:12.5px;">Manage</button></div>' +
@@ -79,7 +87,7 @@ hqOnReady(function () {
     var s = current;
     $('detailServiceName').textContent = s.name;
     $('detailServiceCategory').textContent = s.needsTemplate ? 'DESIGN SERVICE' : 'OPTIONS ONLY';
-    $('detailServicePrice').innerHTML = priceHtml(s.priceText);
+    $('detailServicePrice').innerHTML = priceHtml(s.priceText, s.fromPrice, s.unitLabel);
     $('detailTabBtnTemplates').style.display = s.needsTemplate ? '' : 'none';
     $('detailTabTemplatesCount').textContent = '(' + s.templateCount + ')';
     $('detailTabChoicesCount').textContent = '(' + s.choices.length + ')';
@@ -98,6 +106,7 @@ hqOnReady(function () {
     $('detailSettingsAI').checked = s.aiEnabled; $('detailSettingsUpload').checked = s.uploadEnabled;
     $('detailSettingsNeedsInfo').checked = s.needsInfo;
     $('detailSettingsProduct').value = s.productType;
+    $('detailSettingsUnit').value = s.unitLabel || 'pc';
     ['Circle', 'Triangle', 'Square', 'Heart', 'Photo'].forEach(function (n) { $('detailSettingsCut' + n).checked = s.cutShapes.indexOf(n.toLowerCase()) !== -1; });
     $('detailSettingsCutHole').checked = s.cutHole;
     $('detailTabBtnInfo').style.display = s.needsInfo ? '' : 'none';
@@ -182,6 +191,7 @@ hqOnReady(function () {
 
   // ---------- choices (option groups) ----------
   function saveChoicesSoon() {
+    if (!priceTyping) renderPriceTable();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async function () {
       var r = await hqAdmin('service_save', serviceToPayload(current));
@@ -189,7 +199,53 @@ hqOnReady(function () {
     }, 500);
   }
 
+  var priceTyping = false;
+  // price table: a price for every combination of the ticked groups (e.g. A4 + Black & white = 2)
+  function renderPriceTable() {
+    var box = $('priceTableBox');
+    if (!box || !current) return;
+    var m = current.priceMatrix, named = function (g) { return g.options.filter(function (o) { return o.name.trim(); }); };
+    var groups = current.choices.filter(function (g) { return named(g).length; });
+    m.groups = m.groups.filter(function (gid) { return groups.some(function (g) { return g.id === gid; }); });
+    var picked = m.groups.map(function (gid) { return groups.find(function (g) { return g.id === gid; }); });
+    var combos = [[]];
+    picked.forEach(function (g) { var next = []; combos.forEach(function (c) { named(g).forEach(function (o) { next.push(c.concat([{ g: g, o: o }])); }); }); combos = next; });
+    var valid = {}; combos.forEach(function (c) { valid[c.map(function (x) { return x.o.id; }).join('|')] = true; });
+    Object.keys(m.prices).forEach(function (k) { if (!valid[k]) delete m.prices[k]; });
+
+    var unit = esc(current.unitLabel || 'pc');
+    var html = '<div class="admin-option-group" style="margin-top:20px;"><div class="admin-option-group-header"><strong>Price table</strong></div>' +
+      '<p class="admin-modal-hint">Use this when the price depends on a combination, e.g. <b>Paper size</b> + <b>Print color</b> (A4 black &amp; white = &#8369;2, A4 colored = &#8369;3...). Tick up to 3 groups, then type the price for each combination. Customers see this table and their total. While a price table is used, the Base Price and the + prices of the ticked groups are ignored, and a combination with no price can\'t be ordered.</p>';
+    if (!groups.length) html += '<p class="admin-modal-hint">Add an option group above first (for example "Paper size" with A4, Short, Long).</p>';
+    else html += '<div style="margin:8px 0;">' + groups.map(function (g) {
+      return '<label class="admin-checkbox-label"><input type="checkbox" data-pm="' + g.id + '"' + (m.groups.indexOf(g.id) !== -1 ? ' checked' : '') + '> <span>' + esc(g.name) + '</span></label>';
+    }).join('') + '</div>';
+    if (picked.length) {
+      html += '<table class="admin-table"><thead><tr><th>Combination</th><th>Price per ' + unit + ' (&#8369;)</th></tr></thead><tbody>' + combos.map(function (c) {
+        var key = c.map(function (x) { return x.o.id; }).join('|');
+        return '<tr><td>' + c.map(function (x) { return esc(x.o.name); }).join(' &middot; ') + '</td><td><input type="number" min="0" step="0.01" data-key="' + key + '" value="' + (m.prices[key] || '') + '" style="width:110px;"></td></tr>';
+      }).join('') + '</tbody></table>';
+    }
+    box.innerHTML = html + '</div>';
+    box.querySelectorAll('input[data-pm]').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        var i = m.groups.indexOf(cb.dataset.pm);
+        if (cb.checked && i === -1) { if (m.groups.length >= 3) { cb.checked = false; return alert('You can combine up to 3 groups.'); } m.groups.push(cb.dataset.pm); }
+        if (!cb.checked && i !== -1) m.groups.splice(i, 1);
+        saveChoicesSoon();
+      });
+    });
+    box.querySelectorAll('input[data-key]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        if (v > 0) m.prices[inp.dataset.key] = v; else delete m.prices[inp.dataset.key];
+        priceTyping = true; saveChoicesSoon(); priceTyping = false;   // save, but don't redraw while typing
+      });
+    });
+  }
+
   function renderChoices() {
+    renderPriceTable();
     var box = $('optionGroupsList');
     var groups = current.choices;
     $('detailTabChoicesCount').textContent = '(' + groups.length + ')';
@@ -220,7 +276,7 @@ hqOnReady(function () {
         groups.splice(groups.indexOf(g), 1); renderChoices(); saveChoicesSoon();
       });
       el.querySelector('[data-f="addo"]').addEventListener('click', function () {
-        g.options.push({ name: '', price: 0 }); renderChoices(); saveChoicesSoon();
+        g.options.push({ id: uid(), name: '', price: 0 }); renderChoices(); saveChoicesSoon();
       });
       el.querySelectorAll('.admin-option-row').forEach(function (row) {
         var o = g.options[parseInt(row.dataset.o, 10)];
@@ -263,7 +319,7 @@ hqOnReady(function () {
     return { id: s.id, name: s.name, description: s.description, priceText: s.priceText, orderUrl: s.orderUrl,
              needsTemplate: s.needsTemplate, isActive: s.isActive, occasions: s.occasions, choices: s.choices,
              previewMode: s.previewMode, shapes: s.shapes, ratioW: s.ratioW, ratioH: s.ratioH, textPosition: s.textPosition,
-             aiEnabled: s.aiEnabled, uploadEnabled: s.uploadEnabled, infoFields: s.infoFields, needsInfo: s.needsInfo, cutShapes: s.cutShapes, cutHole: s.cutHole, productType: s.productType };
+             aiEnabled: s.aiEnabled, uploadEnabled: s.uploadEnabled, infoFields: s.infoFields, needsInfo: s.needsInfo, cutShapes: s.cutShapes, cutHole: s.cutHole, productType: s.productType, priceMatrix: s.priceMatrix, unitLabel: s.unitLabel };
   }
 
   // ---------- chips (occasions) ----------
@@ -330,7 +386,7 @@ hqOnReady(function () {
 
   // choices
   $('addOptionGroupBtn').addEventListener('click', function () {
-    current.choices.push({ name: 'New group', required: false, options: [{ name: '', price: 0 }] });
+    current.choices.push({ id: uid(), name: 'New group', required: false, options: [{ id: uid(), name: '', price: 0 }] });
     renderChoices(); saveChoicesSoon();
   });
 
@@ -376,6 +432,7 @@ hqOnReady(function () {
     current.aiEnabled = $('detailSettingsAI').checked; current.uploadEnabled = $('detailSettingsUpload').checked;
     current.needsInfo = $('detailSettingsNeedsInfo').checked;
     current.productType = $('detailSettingsProduct').value;
+    current.unitLabel = $('detailSettingsUnit').value.trim() || 'pc';
     current.cutShapes = ['Circle', 'Triangle', 'Square', 'Heart', 'Photo'].filter(function (n) { return $('detailSettingsCut' + n).checked; }).map(function (n) { return n.toLowerCase(); });
     current.cutHole = $('detailSettingsCutHole').checked;
     var r = await hqAdmin('service_save', serviceToPayload(current));

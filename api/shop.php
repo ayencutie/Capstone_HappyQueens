@@ -24,6 +24,10 @@ function order_full(array $o) {
         'total' => (float)$o['total'], 'due' => (float)$o['amount_due'], 'paid' => $paid, 'balance' => max(0, round((float)$o['total'] - $paid, 2)),
         'payOption' => $o['pay_option'], 'paymentStatus' => $o['payment_status'], 'method' => $o['payment'], 'status' => $o['status'],
         'canCancel' => $o['status'] === 'pending',
+        'fulfillment' => $o['fulfillment'], 'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status'],
+        // the delivery fee only shows up to the customer once the order is packing / out for delivery
+        'deliveryDue' => $o['fulfillment'] === 'delivery' && (float)$o['delivery_fee'] > 0 && $o['delivery_status'] === 'unpaid' && in_array($o['status'], ['packing', 'out-for-delivery'], true),
+        'deliveryAddress' => $d['delivery']['address'] ?? '', 'deliveryLandmark' => $d['delivery']['landmark'] ?? '', 'contactPhone' => $d['contactPhone'] ?? '', 'lalamoveRef' => $o['lalamove_ref'],
         'refundStatus' => $o['refund_status'], 'refundAmount' => (float)$o['refund_amount'],
         'designImage' => $o['design_image'], 'shape' => $d['shape'] ?? 'no-fold', 'info' => $d['info'] ?? [],
         'designSource' => $d['design']['source'] ?? 'none', 'notes' => $d['notes'] ?? '',
@@ -33,7 +37,8 @@ function order_summary(array $o) {
     return ['orderId' => $o['order_code'], 'service' => $o['service_name'], 'qty' => (int)$o['qty'],
             'total' => (float)$o['total'], 'due' => (float)$o['amount_due'], 'paid' => (float)$o['amount_paid'],
             'balance' => max(0, round((float)$o['total'] - (float)$o['amount_paid'], 2)),
-            'paymentStatus' => $o['payment_status'], 'payOption' => $o['pay_option'], 'method' => $o['payment'], 'status' => $o['status']];
+            'paymentStatus' => $o['payment_status'], 'payOption' => $o['pay_option'], 'method' => $o['payment'], 'status' => $o['status'],
+            'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status']];
 }
 
 try {
@@ -83,20 +88,35 @@ try {
         $shapes = json_list($svc['shapes']) ?: ['no-fold'];
         $shape = in_array($in['shape'] ?? '', $shapes, true) ? $in['shape'] : $shapes[0];
 
-        // price = base price + chosen options (looked up on the server, never trusted from the browser)
-        $unit = preg_match('/\d+(\.\d+)?/', $svc['price_text'], $m) ? (float)$m[0] : 0.0;
+        // price: from the service's price table (e.g. A4 + black & white = 2.00) or its base price, plus other chosen options.
+        // Always worked out here on the server, never trusted from the browser.
         $groups = json_list($svc['choices']);
-        $picked = [];
+        $matrix = json_list($svc['price_matrix'] ?? '[]');
+        $mGroups = is_array($matrix['groups'] ?? null) ? $matrix['groups'] : [];
+        $unit = 0.0; $picked = []; $pickedIds = [];
         foreach ((is_array($in['selections'] ?? null) ? $in['selections'] : []) as $sel) {
             foreach ($groups as $g) {
                 if ($g['name'] !== ($sel['group'] ?? null)) continue;
-                foreach ($g['options'] as $o) if ($o['name'] === ($sel['option'] ?? null)) { $unit += (float)$o['price']; $picked[] = ['group' => $g['name'], 'option' => $o['name'], 'price' => $o['price']]; }
+                foreach ($g['options'] as $o) if ($o['name'] === ($sel['option'] ?? null)) {
+                    $inMatrix = in_array($g['id'] ?? '', $mGroups, true);
+                    if (!$inMatrix) $unit += (float)$o['price'];
+                    $picked[] = ['group' => $g['name'], 'option' => $o['name'], 'price' => $inMatrix ? 0 : $o['price']];
+                    $pickedIds[$g['id'] ?? ''] = $o['id'] ?? '';
+                }
             }
         }
         foreach ($groups as $g) {
-            if (empty($g['required'])) continue;
+            if (empty($g['required']) && !in_array($g['id'] ?? '', $mGroups, true)) continue;
             $has = false; foreach ($picked as $p) if ($p['group'] === $g['name']) $has = true;
             if (!$has) fail('Please choose: ' . $g['name']);
+        }
+        if ($mGroups) {
+            $key = implode('|', array_map(function ($gid) use ($pickedIds) { return $pickedIds[$gid] ?? ''; }, $mGroups));
+            $mp = (float)($matrix['prices'][$key] ?? 0);
+            if ($mp <= 0) fail('The price for this choice is not set yet. Please pick another option, or contact us.');
+            $unit += $mp;
+        } else {
+            $unit += preg_match('/\d+(\.\d+)?/', $svc['price_text'], $bm) ? (float)$bm[0] : 0.0;
         }
 
         // the info the customer typed in (name, address, date ...)
@@ -122,6 +142,21 @@ try {
             $spec = clean_spec($d['spec'] ?? null);
             if ($spec) $design = ['source' => 'ai', 'prompt' => clean_text($d['prompt'] ?? '', 300), 'spec' => $spec];
         }
+        // contact number for EVERY order (so we can reach the customer, and the Lalamove rider can call).
+        // Pickup at the shop, or delivery by Lalamove: delivery also needs the receiver, home address and a landmark.
+        // The delivery fee is NOT part of this payment; it is added later when the order is packing.
+        $contactPhone = normalize_phone($in['contactPhone'] ?? '');
+        if (!preg_match('/^09\d{9}$/', $contactPhone)) fail('Please enter your mobile number (09XX XXX XXXX) so we can reach you.');
+        $fulfillment = (($in['fulfillment'] ?? 'pickup') === 'delivery') ? 'delivery' : 'pickup';
+        $delivery = null;
+        if ($fulfillment === 'delivery') {
+            $dv = is_array($in['delivery'] ?? null) ? $in['delivery'] : [];
+            $dn = clean_text($dv['name'] ?? '', 80); $da = clean_text($dv['address'] ?? '', 300); $dl = clean_text($dv['landmark'] ?? '', 150);
+            if ($dn === '') fail('Please enter the name of the person receiving the order.');
+            if (mb_strlen($da) < 10) fail('Please enter your complete home address.');
+            if (mb_strlen($dl) < 3) fail('Please enter a landmark near your address (it helps the rider find you).');
+            $delivery = ['name' => $dn, 'phone' => $contactPhone, 'address' => $da, 'landmark' => $dl];
+        }
         $orientation = in_array($in['orientation'] ?? '', ['portrait', 'landscape'], true) ? $in['orientation'] : 'portrait';
         $cuts = clean_cut_shapes(json_list($svc['cut_shapes']));
         $cutShape = null;
@@ -137,9 +172,9 @@ try {
         $dueCents = $payOption === 'full' ? $totalCents : (int)ceil($totalCents * DOWNPAYMENT_PERCENT / 100);
         if ($dueCents < 2000) fail('The amount to pay online must be at least ' . "\u{20B1}" . '20. Please increase the quantity.');
 
-        $details = ['selections' => $picked, 'shape' => $shape, 'orientation' => $orientation, 'cutShape' => $cutShape, 'info' => $infoRows, 'design' => $design, 'notes' => clean_text($in['notes'] ?? '', 500)];
-        db()->prepare("INSERT INTO orders (user_id,service_id,service_name,qty,total,payment,details,payment_status,pay_option,amount_due) VALUES (?,?,?,?,?,'PayMongo',?, 'unpaid',?,?)")
-            ->execute([$uid, $svc['id'], $svc['name'], $qty, $totalCents / 100, json_encode($details), $payOption, $dueCents / 100]);
+        $details = ['selections' => $picked, 'shape' => $shape, 'orientation' => $orientation, 'cutShape' => $cutShape, 'contactPhone' => $contactPhone, 'unitPrice' => round($unit, 2), 'delivery' => $delivery, 'info' => $infoRows, 'design' => $design, 'notes' => clean_text($in['notes'] ?? '', 500)];
+        db()->prepare("INSERT INTO orders (user_id,service_id,service_name,qty,total,payment,details,payment_status,pay_option,amount_due,fulfillment) VALUES (?,?,?,?,?,'PayMongo',?, 'unpaid',?,?,?)")
+            ->execute([$uid, $svc['id'], $svc['name'], $qty, $totalCents / 100, json_encode($details), $payOption, $dueCents / 100, $fulfillment]);
         $id = (int)db()->lastInsertId();
         $code = 'HQ-' . (1000 + $id);
         db()->prepare('UPDATE orders SET order_code=? WHERE id=?')->execute([$code, $id]);
@@ -175,6 +210,9 @@ try {
         foreach ($rows as $o) {
             if ($o['payment_status'] === 'unpaid' && $o['status'] === 'pending' && $o['checkout_session'] && PAYMONGO_SECRET !== '' && $checked < 3) {
                 $checked++; try { $o = sync_payment($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
+            }
+            if ($o['delivery_status'] === 'unpaid' && $o['delivery_session'] && PAYMONGO_SECRET !== '' && $checked < 3) {
+                $checked++; try { $o = sync_delivery($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
             }
             $list[] = order_full($o);
         }
@@ -240,7 +278,18 @@ try {
         $uid = need_customer();
         $o = my_order((string)($in['orderId'] ?? ''), $uid);
         try { $o = sync_payment($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
+        try { $o = sync_delivery($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
         out(['ok' => true, 'order' => order_summary($o)]);
+
+    // Pay the Lalamove delivery fee (only once the order is packing / out for delivery)
+    case 'pay_delivery':
+        $uid = need_customer();
+        $o = my_order((string)($in['orderId'] ?? ''), $uid);
+        if ($o['fulfillment'] !== 'delivery' || $o['delivery_status'] !== 'unpaid' || (float)$o['delivery_fee'] <= 0 || !in_array($o['status'], ['packing', 'out-for-delivery'], true)) fail('There is no delivery fee to pay right now.');
+        try { $co = paymongo_delivery_checkout($o['order_code'], (int)round($o['delivery_fee'] * 100)); }
+        catch (RuntimeException $e) { fail('We could not start the payment. ' . $e->getMessage(), 502); }
+        db()->prepare('UPDATE orders SET delivery_session=? WHERE id=?')->execute([$co['id'], $o['id']]);
+        out(['ok' => true, 'checkoutUrl' => $co['url']]);
 
     // Retry paying an order that is still unpaid
     case 'pay_order':

@@ -9,8 +9,8 @@ $event = json_decode(file_get_contents('php://input'), true);
 $sessionId = $event['data']['attributes']['data']['id'] ?? '';
 if ($sessionId) {
     try {
-        $s = db()->prepare('SELECT * FROM orders WHERE checkout_session = ?'); $s->execute([$sessionId]);
-        if ($o = $s->fetch()) sync_payment($o);   // re-checks with PayMongo itself, so a fake request can't mark anything paid
+        $s = db()->prepare('SELECT * FROM orders WHERE checkout_session = ? OR delivery_session = ?'); $s->execute([$sessionId, $sessionId]);
+        if ($o = $s->fetch()) { $o = sync_payment($o); sync_delivery($o); }   // re-checks with PayMongo itself, so a fake request can't mark anything paid
     } catch (Throwable $e) { error_log($e->getMessage()); }
 }
 echo json_encode(['ok' => true]);

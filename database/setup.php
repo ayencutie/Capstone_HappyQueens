@@ -119,6 +119,10 @@ if ($good) {
         add_col($pdo, 'services', 'ai_enabled', 'TINYINT(1) NOT NULL DEFAULT 1');
         add_col($pdo, 'services', 'upload_enabled', 'TINYINT(1) NOT NULL DEFAULT 1');
         add_col($pdo, 'services', 'info_fields', 'MEDIUMTEXT NULL');
+        $addedMatrix = add_col($pdo, 'services', 'price_matrix', 'MEDIUMTEXT NULL');
+        add_col($pdo, 'services', 'unit_label', "VARCHAR(20) NOT NULL DEFAULT 'pc'");
+        add_col($pdo, 'users', 'address', 'VARCHAR(300) NULL');
+        add_col($pdo, 'users', 'landmark', 'VARCHAR(150) NULL');
         $addedProduct = add_col($pdo, 'services', 'product_type', "VARCHAR(10) NOT NULL DEFAULT 'paper'");
         $addedCut = add_col($pdo, 'services', 'cut_shapes', "VARCHAR(120) NOT NULL DEFAULT '[]'");
         add_col($pdo, 'services', 'cut_hole', 'TINYINT(1) NOT NULL DEFAULT 0');
@@ -129,6 +133,13 @@ if ($good) {
         add_col($pdo, 'orders', 'refund_amount', 'DECIMAL(10,2) NOT NULL DEFAULT 0');
         add_col($pdo, 'orders', 'refund_id', 'VARCHAR(40) NULL');
         add_col($pdo, 'orders', 'refund_note', 'VARCHAR(190) NULL');
+        add_col($pdo, 'orders', 'fulfillment', "VARCHAR(10) NOT NULL DEFAULT 'pickup'");
+        add_col($pdo, 'orders', 'delivery_fee', 'DECIMAL(10,2) NOT NULL DEFAULT 0');
+        add_col($pdo, 'orders', 'delivery_status', "VARCHAR(10) NOT NULL DEFAULT 'none'");
+        add_col($pdo, 'orders', 'delivery_session', 'VARCHAR(80) NULL');
+        add_col($pdo, 'orders', 'delivery_payment_id', 'VARCHAR(40) NULL');
+        add_col($pdo, 'orders', 'delivery_paid_at', 'DATETIME NULL');
+        add_col($pdo, 'orders', 'lalamove_ref', 'VARCHAR(190) NULL');
         $pdo->exec("CREATE TABLE IF NOT EXISTS inquiries (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             user_id INT UNSIGNED NULL,
@@ -184,6 +195,14 @@ if ($good) {
         if ($addedCut) {   // keychains + magnets can be cut into shapes (first time only; change it in Admin > Services > Settings)
             $pdo->prepare("UPDATE services SET cut_shapes=?, preview_mode='3d', text_position='center', ai_enabled=1 WHERE name IN ('Keychains','Ref Magnets')")->execute([json_encode(['circle', 'triangle', 'square', 'photo'])]);
             $pdo->exec("UPDATE services SET cut_hole=1 WHERE name='Keychains'");
+        }
+        if ($addedMatrix) {   // Documents: a price table (paper size x print color). These prices are SAMPLES: edit them in Admin > Services > Documents > Choices.
+            $choices = [
+                ['id' => 'g_size', 'name' => 'Paper size', 'required' => true, 'options' => [['id' => 'sz_a4', 'name' => 'A4', 'price' => 0], ['id' => 'sz_short', 'name' => 'Short', 'price' => 0], ['id' => 'sz_long', 'name' => 'Long', 'price' => 0]]],
+                ['id' => 'g_color', 'name' => 'Print color', 'required' => true, 'options' => [['id' => 'cl_bw', 'name' => 'Black & white', 'price' => 0], ['id' => 'cl_col', 'name' => 'Colored', 'price' => 0]]],
+            ];
+            $matrix = ['groups' => ['g_size', 'g_color'], 'prices' => ['sz_a4|cl_bw' => 2, 'sz_a4|cl_col' => 3, 'sz_short|cl_bw' => 2, 'sz_short|cl_col' => 3, 'sz_long|cl_bw' => 3, 'sz_long|cl_col' => 4]];
+            $pdo->prepare("UPDATE services SET choices=?, price_matrix=?, unit_label='page' WHERE name='Documents' AND (choices IS NULL OR choices='[]')")->execute([json_encode($choices), json_encode($matrix)]);
         }
         if ($addedProduct) {   // how each product looks (3D + its back). Change it in Admin > Services > Settings.
             $pdo->exec("UPDATE services SET product_type='magnet' WHERE name='Ref Magnets'");

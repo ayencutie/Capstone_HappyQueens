@@ -36,5 +36,17 @@
     window.location.href = r.checkoutUrl;
   }
 
-  window.HQOrders = { LABEL: LABEL, STEPS: STEPS, peso: peso, dateText: dateText, payText: payText, refundText: refundText, cancel: cancel, payNow: payNow };
+  function deliveryText(o) {
+    if (o.fulfillment !== 'delivery') return 'Pick up at the shop';
+    if (o.deliveryStatus === 'paid') return 'Delivery by Lalamove \u2014 delivery fee ' + peso(o.deliveryFee) + ' paid' + (o.lalamoveRef ? ' (' + o.lalamoveRef + ')' : '');
+    if (o.deliveryDue) return 'Delivery by Lalamove \u2014 delivery fee ' + peso(o.deliveryFee) + ' to pay';
+    return 'Delivery by Lalamove \u2014 the delivery fee will be added when your order is being packed';
+  }
+  async function payDelivery(o) {
+    var r = await hqShop('pay_delivery', { orderId: o.orderId });
+    if (!r.ok) { alert(r.error || 'Could not start the payment.'); return; }
+    window.location.href = r.checkoutUrl;
+  }
+
+  window.HQOrders = { deliveryText: deliveryText, payDelivery: payDelivery, LABEL: LABEL, STEPS: STEPS, peso: peso, dateText: dateText, payText: payText, refundText: refundText, cancel: cancel, payNow: payNow };
 })();

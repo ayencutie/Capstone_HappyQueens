@@ -164,7 +164,7 @@ try {
         $c = db()->prepare("SELECT COUNT(*) AS total, COALESCE(SUM(status NOT IN ('completed','cancelled')),0) AS open_orders FROM orders WHERE user_id=?");
         $c->execute([$u['id']]); $n = $c->fetch();
         out(['ok' => true, 'profile' => ['firstName' => $u['first_name'], 'lastName' => $u['last_name'], 'email' => $u['email'], 'contactNo' => $u['contact_no'],
-             'since' => substr($u['created_at'], 0, 10), 'orders' => (int)$n['total'], 'openOrders' => (int)$n['open_orders']]]);
+             'address' => $u['address'] ?? '', 'landmark' => $u['landmark'] ?? '', 'since' => substr($u['created_at'], 0, 10), 'orders' => (int)$n['total'], 'openOrders' => (int)$n['open_orders']]]);
 
     case 'update_profile':
         $u = member();
@@ -173,7 +173,8 @@ try {
         if (!preg_match('/^09\d{9}$/', $phone)) fail('Please enter a valid Philippine mobile number.');
         $q = db()->prepare('SELECT COUNT(*) FROM users WHERE contact_no=? AND id<>?'); $q->execute([$phone, $u['id']]);
         if ($q->fetchColumn() > 0) fail('That phone number is already used by another account.', 409);
-        db()->prepare('UPDATE users SET first_name=?, last_name=?, contact_no=? WHERE id=?')->execute([$first, $last, $phone, $u['id']]);
+        $addr = mb_substr(trim((string)($in['address'] ?? '')), 0, 300); $land = mb_substr(trim((string)($in['landmark'] ?? '')), 0, 150);
+        db()->prepare('UPDATE users SET first_name=?, last_name=?, contact_no=?, address=?, landmark=? WHERE id=?')->execute([$first, $last, $phone, $addr, $land, $u['id']]);
         $_SESSION['user']['firstName'] = $first;
         out(['ok' => true]);
 

@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   is_verified TINYINT(1) NOT NULL DEFAULT 0,
   failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
   locked_until INT UNSIGNED NOT NULL DEFAULT 0,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  address VARCHAR(300) NULL,
+  landmark VARCHAR(150) NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS otp_codes (
@@ -47,7 +49,9 @@ CREATE TABLE IF NOT EXISTS services (
   needs_info TINYINT(1) NOT NULL DEFAULT 1,
   cut_shapes VARCHAR(120) NOT NULL DEFAULT '[]',
   cut_hole TINYINT(1) NOT NULL DEFAULT 0,
-  product_type VARCHAR(10) NOT NULL DEFAULT 'paper'
+  product_type VARCHAR(10) NOT NULL DEFAULT 'paper',
+  price_matrix MEDIUMTEXT NULL,
+  unit_label VARCHAR(20) NOT NULL DEFAULT 'pc'
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS templates (
@@ -79,6 +83,10 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_id VARCHAR(40) NULL, paid_at DATETIME NULL,
   refund_status VARCHAR(10) NOT NULL DEFAULT 'none', refund_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
   refund_id VARCHAR(40) NULL, refund_note VARCHAR(190) NULL,
+  fulfillment VARCHAR(10) NOT NULL DEFAULT 'pickup',
+  delivery_fee DECIMAL(10,2) NOT NULL DEFAULT 0, delivery_status VARCHAR(10) NOT NULL DEFAULT 'none',
+  delivery_session VARCHAR(80) NULL, delivery_payment_id VARCHAR(40) NULL, delivery_paid_at DATETIME NULL,
+  lalamove_ref VARCHAR(190) NULL,
   INDEX (status),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL

@@ -12,7 +12,8 @@ hqOnReady(async function () {
       ? '<img class="service-image" src="' + hqEsc(hqAsset(s.image)) + '" alt="' + hqEsc(s.name) + '">'
       : '<div class="service-image service-image-empty"><i class="fa-solid fa-gift"></i></div>';
     var price = (s.priceText || '').trim();
-    var priceHtml = price ? '<div class="service-price">' + (/\d/.test(price) ? 'From &#8369;' : '') + hqEsc(price) + '</div>' : '';
+    var priceHtml = s.fromPrice ? '<div class="service-price">From &#8369;' + hqEsc(String(s.fromPrice)) + (s.unitLabel && s.unitLabel !== 'pc' ? ' / ' + hqEsc(s.unitLabel) : '') + '</div>'
+      : price ? '<div class="service-price">' + (/\d/.test(price) ? 'From &#8369;' : '') + hqEsc(price) + '</div>' : '';
     // the order page set in Admin > Services, or a generic one with the service id
     var href = s.orderUrl ? s.orderUrl : 'order.html?service=' + s.id;
     return '<div class="service-card"><div class="service-image-wrap">' + img + '</div>' +

@@ -10,6 +10,7 @@ hqOnReady(async function () {
     $('pfSince').textContent = new Date(p.since + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     $('pfOrders').textContent = p.orders; $('pfOpen').textContent = p.openOrders;
     $('firstName').value = p.firstName; $('lastName').value = p.lastName; $('contactNo').value = p.contactNo; $('emailAddress').value = p.email;
+    $('address').value = p.address || ''; $('landmark').value = p.landmark || '';
   }
 
   var r = await hqApi('profile');
@@ -19,7 +20,7 @@ hqOnReady(async function () {
   $('profileForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var btn = $('profileSave'); btn.disabled = true;
-    var res = await hqApi('update_profile', { firstName: $('firstName').value, lastName: $('lastName').value, contactNo: $('contactNo').value });
+    var res = await hqApi('update_profile', { firstName: $('firstName').value, lastName: $('lastName').value, contactNo: $('contactNo').value, address: $('address').value, landmark: $('landmark').value });
     btn.disabled = false;
     if (!res.ok) { say(res.error || 'Could not save.', false); return; }
     var again = await hqApi('profile'); if (again.ok) fill(again.profile);

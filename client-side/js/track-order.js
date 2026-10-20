@@ -21,6 +21,8 @@ hqOnReady(async function () {
       }).join('') + '</ol>';
     }
 
+    var deliveryRow = o.fulfillment === 'delivery'
+      ? '<div class="summary-row"><span>Lalamove delivery fee</span><span>' + (o.deliveryStatus === 'paid' ? O.peso(o.deliveryFee) + ' paid' : o.deliveryDue ? O.peso(o.deliveryFee) + ' to pay' : 'Added when packing') + '</span></div>' : '';
     var design = o.designImage ? '<img class="track-design" src="' + esc(hqAsset(o.designImage)) + '" alt="Your design">' : '<p class="track-muted">No design preview was saved for this order.</p>';
     var info = (o.info || []).map(function (x) { return '<div class="summary-row"><span>' + esc(x.label) + '</span><span style="text-align:right;white-space:pre-line;">' + esc(x.value) + '</span></div>'; }).join('');
     var actions = '';
@@ -28,6 +30,7 @@ hqOnReady(async function () {
     if (o.canCancel) actions += '<button type="button" class="btn btn-danger" id="trkCancel">Cancel order</button>';
     else if (o.status !== 'cancelled' && o.status !== 'completed') actions += '<p class="track-muted">This order is being processed, so it can no longer be cancelled.</p>';
 
+    if (o.deliveryDue) actions = '<button type="button" class="btn btn-filled" id="trkPayDel">Pay delivery fee ' + O.peso(o.deliveryFee) + '</button>' + actions;
     $('trackResultBody').innerHTML =
       '<div class="track-result-head"><div><h2>' + esc(o.orderId) + '</h2><p>' + esc(o.service) + ' &times; ' + o.qty + ' &middot; placed ' + O.dateText(o.date) + '</p></div><span class="st-badge st-' + o.status + '">' + O.LABEL[o.status] + '</span></div>' +
       steps +
@@ -35,12 +38,14 @@ hqOnReady(async function () {
         '<div class="track-card"><h3>Payment Summary</h3><div class="summary">' +
           '<div class="summary-row"><span>Total</span><span>' + O.peso(o.total) + '</span></div>' +
           '<div class="summary-row"><span>' + esc(O.payText(o)) + '</span><span>' + O.peso(o.paid) + '</span></div>' +
+          deliveryRow +
           (o.status !== 'cancelled' ? '<div class="summary-row is-total"><span>Balance (pay on pickup / delivery)</span><span>' + O.peso(o.balance) + '</span></div>' : '') +
         '</div>' + (info ? '<h3 style="margin-top:18px;">Details</h3><div class="summary">' + info + '</div>' : '') + '</div>' +
         '<div class="track-card"><h3>Your Design</h3>' + design + '</div>' +
       '</div><div class="track-actions">' + actions + '</div>';
 
     $('trackResult').hidden = false;
+    var pd = $('trkPayDel'); if (pd) pd.addEventListener('click', function () { pd.disabled = true; O.payDelivery(o); });
     var pay = $('trkPay'); if (pay) pay.addEventListener('click', function () { pay.disabled = true; O.payNow(o); });
     var cn = $('trkCancel'); if (cn) cn.addEventListener('click', async function () {
       cn.disabled = true; var u = await O.cancel(o);

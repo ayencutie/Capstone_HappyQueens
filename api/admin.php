@@ -45,7 +45,12 @@ try {
             'needs_info'     => array_key_exists('needsInfo', $in) ? (!empty($in['needsInfo']) ? 1 : 0) : 1,
             'upload_enabled' => array_key_exists('uploadEnabled', $in) ? (!empty($in['uploadEnabled']) ? 1 : 0) : 1,
         ];
-        if (array_key_exists('choices', $in))    $set['choices'] = json_encode(clean_choices($in['choices']));
+        $set['unit_label'] = clean_text($in['unitLabel'] ?? 'pc', 20) ?: 'pc';
+        if (array_key_exists('choices', $in)) {
+            $cleanChoices = clean_choices($in['choices']);
+            $set['choices'] = json_encode($cleanChoices);
+            if (array_key_exists('priceMatrix', $in)) $set['price_matrix'] = json_encode(clean_price_matrix($in['priceMatrix'], $cleanChoices));
+        }
         if (array_key_exists('infoFields', $in)) $set['info_fields'] = json_encode(clean_info_fields($in['infoFields']));
 
         if ($id) {
@@ -139,17 +144,41 @@ try {
                     'payStatus' => $o['payment_status'], 'payOption' => $o['pay_option'], 'amountDue' => (float)$o['amount_due'],
                     'amountPaid' => (float)$o['amount_paid'], 'designImage' => $o['design_image'],
                     'refundStatus' => $o['refund_status'], 'refundAmount' => (float)$o['refund_amount'], 'refundNote' => $o['refund_note'],
+                    'fulfillment' => $o['fulfillment'], 'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status'], 'lalamoveRef' => $o['lalamove_ref'],
                     'details' => json_list($o['details'])];
         }, $rows)]);
 
     case 'order_status':
         $id = (int)($in['id'] ?? 0); $status = $in['status'] ?? '';
         if (!in_array($status, ORDER_STATUSES, true) || $status === 'cancelled') fail('Invalid status.');
-        $s = db()->prepare('SELECT status FROM orders WHERE id=?'); $s->execute([$id]);
-        $cur = $s->fetchColumn();
-        if ($cur === false) fail('Order not found.', 404);
-        if ($cur === 'cancelled' || $cur === 'completed') fail('This order is locked.');
+        $q = db()->prepare('SELECT * FROM orders WHERE id=?'); $q->execute([$id]);
+        $o = $q->fetch();
+        if (!$o) fail('Order not found.', 404);
+        if ($o['status'] === 'cancelled' || $o['status'] === 'completed') fail('This order is locked.');
+        // a delivery order can only go out after the customer paid the Lalamove fee
+        if ($o['fulfillment'] === 'delivery' && $status === 'out-for-delivery' && $o['delivery_status'] !== 'paid') {
+            if ((float)$o['delivery_fee'] <= 0) fail('Enter the Lalamove delivery fee first (open the order > "Request delivery payment").');
+            fail('The customer has not paid the delivery fee yet.');
+        }
         db()->prepare("UPDATE orders SET status=? WHERE id=? AND status NOT IN ('cancelled','completed')")->execute([$status, $id]);
+        $isDelivery = $o['fulfillment'] === 'delivery' && in_array($status, ['packing', 'out-for-delivery'], true);
+        if ($isDelivery && $o['delivery_status'] === 'unpaid' && (float)$o['delivery_fee'] > 0 && $status === 'packing') notify_delivery_fee($id);
+        out(['ok' => true, 'needsDeliveryFee' => $isDelivery && (float)$o['delivery_fee'] <= 0]);
+
+    case 'order_delivery_fee':    // the Lalamove rate the admin got from the app
+        $id = (int)($in['id'] ?? 0); $fee = round((float)($in['fee'] ?? 0), 2); $ref = clean_text($in['ref'] ?? '', 190);
+        $q = db()->prepare('SELECT * FROM orders WHERE id=?'); $q->execute([$id]); $o = $q->fetch();
+        if (!$o || $o['fulfillment'] !== 'delivery') fail('This order is not for delivery.');
+        if ($o['status'] === 'cancelled') fail('This order was cancelled.');
+        if ($o['delivery_status'] === 'paid') fail('The delivery fee was already paid.');
+        if ($fee < 20 || $fee > 20000) fail('Enter the Lalamove fee (at least ' . "\u{20B1}" . '20).');
+        db()->prepare("UPDATE orders SET delivery_fee=?, delivery_status='unpaid', delivery_session=NULL, lalamove_ref=? WHERE id=?")->execute([$fee, $ref !== '' ? $ref : null, $id]);
+        if (in_array($o['status'], ['packing', 'out-for-delivery'], true)) notify_delivery_fee($id);
+        out(['ok' => true]);
+
+    case 'order_delivery_paid':   // e.g. the customer paid the rider fee in cash or by bank transfer
+        $id = (int)($in['id'] ?? 0);
+        db()->prepare("UPDATE orders SET delivery_status='paid', delivery_paid_at=NOW() WHERE id=? AND fulfillment='delivery' AND delivery_fee > 0 AND status <> 'cancelled'")->execute([$id]);
         out(['ok' => true]);
 
     case 'dashboard':

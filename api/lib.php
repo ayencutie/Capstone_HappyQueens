@@ -32,30 +32,74 @@ function service_out(array $r, $withChoices = false) {
         'needsInfo'     => isset($r['needs_info']) ? (bool)$r['needs_info'] : true,
         'cutShapes'     => clean_cut_shapes(json_list($r['cut_shapes'] ?? '[]')),
         'cutHole'       => !empty($r['cut_hole']),
+        'unitLabel'     => ($r['unit_label'] ?? '') !== '' ? $r['unit_label'] : 'pc',
+        'fromPrice'     => from_price($r),
         'productType'   => in_array($r['product_type'] ?? '', ['paper', 'photo', 'sticker', 'magnet', 'keychain'], true) ? $r['product_type'] : 'paper',
         'templateCount' => isset($r['template_count']) ? (int)$r['template_count'] : 0,
     ];
-    if ($withChoices) $o['choices'] = json_list($r['choices']);
+    if ($withChoices) {
+        $o['choices'] = json_list($r['choices']);
+        $pm = json_list($r['price_matrix'] ?? '[]');
+        $o['priceMatrix'] = ['groups' => $pm['groups'] ?? [], 'prices' => !empty($pm['prices']) ? $pm['prices'] : new stdClass()];
+    }
     return $o;
 }
 
 function clean_text($v, $max) { return mb_substr(trim((string)$v), 0, $max); }
 
+function clean_id($v, array &$used) {
+    $v = is_string($v) ? strtolower($v) : '';
+    if (!preg_match('/^[a-z0-9_]{2,16}$/', $v) || isset($used[$v])) { do { $v = substr(bin2hex(random_bytes(6)), 0, 10); } while (isset($used[$v])); }
+    $used[$v] = true;
+    return $v;
+}
+
 function clean_choices($c) {
-    $out = [];
+    $out = []; $used = [];
     if (!is_array($c)) return $out;
     foreach (array_slice($c, 0, 20) as $g) {
         if (!is_array($g)) continue;
+        $gid = clean_id($g['id'] ?? '', $used);
         $opts = [];
         foreach (array_slice(is_array($g['options'] ?? null) ? $g['options'] : [], 0, 50) as $o) {
             $n = clean_text($o['name'] ?? '', 60);
             if ($n === '') continue;
-            $opts[] = ['name' => $n, 'price' => max(0, round((float)($o['price'] ?? 0), 2))];
+            $opts[] = ['id' => clean_id($o['id'] ?? '', $used), 'name' => $n, 'price' => max(0, round((float)($o['price'] ?? 0), 2))];
         }
         $name = clean_text($g['name'] ?? '', 60);
-        $out[] = ['name' => $name !== '' ? $name : 'Untitled', 'required' => !empty($g['required']), 'options' => $opts];
+        $out[] = ['id' => $gid, 'name' => $name !== '' ? $name : 'Untitled', 'required' => !empty($g['required']), 'options' => $opts];
     }
     return $out;
+}
+
+// "Price table": one price for each combination of the chosen groups (e.g. paper size x print color)
+function clean_price_matrix($m, array $choices) {
+    $out = ['groups' => [], 'prices' => []];
+    if (!is_array($m)) return $out;
+    $byId = [];
+    foreach ($choices as $g) $byId[$g['id']] = $g;
+    foreach (array_slice((array)($m['groups'] ?? []), 0, 3) as $gid) {
+        if (isset($byId[$gid]) && count($byId[$gid]['options']) && !in_array($gid, $out['groups'], true)) $out['groups'][] = $gid;
+    }
+    if (!$out['groups']) return $out;
+    $combos = [[]];
+    foreach ($out['groups'] as $gid) {
+        $next = [];
+        foreach ($combos as $c) foreach ($byId[$gid]['options'] as $o) { $next[] = array_merge($c, [$o['id']]); if (count($next) >= 500) break 2; }
+        $combos = $next;
+    }
+    $valid = [];
+    foreach ($combos as $c) $valid[implode('|', $c)] = true;
+    foreach ((array)($m['prices'] ?? []) as $k => $v) {
+        if (isset($valid[$k]) && is_numeric($v) && $v > 0 && $v <= 100000) $out['prices'][$k] = round((float)$v, 2);
+    }
+    return $out;
+}
+
+function from_price(array $r) {
+    $m = json_list($r['price_matrix'] ?? '[]');
+    if (!empty($m['groups']) && !empty($m['prices'])) return min(array_map('floatval', $m['prices']));
+    return preg_match('/\d+(\.\d+)?/', (string)$r['price_text'], $x) ? (float)$x[0] : null;
 }
 
 function clean_occasions($list) {

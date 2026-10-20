@@ -223,3 +223,11 @@
 .danger-zone { border-color: rgba(178, 52, 52, 0.35); }
 .danger-zone h3 { color: #b23434; }
 @media (max-width: 860px) { .account-layout { grid-template-columns: 1fr; } .form-two { grid-template-columns: 1fr; } }
+
+/* --- price table ------------------------------------------------------------------ */
+.price-table { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 13.5px; }
+.price-table th { padding: 8px 12px; text-align: left; font-weight: 700; color: var(--color-text); background: var(--color-bg-soft); }
+.price-table th:last-child, .price-table td:last-child { text-align: right; }
+.price-table td { padding: 8px 12px; color: var(--color-text-light); border-bottom: 1px solid var(--color-border); }
+.price-table tr.is-selected td { font-weight: 700; color: var(--color-text); background: var(--color-primary-pale); }
+.price-table em { font-style: normal; color: #c0392b; }

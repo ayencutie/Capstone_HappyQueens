@@ -96,3 +96,14 @@ Works without any key (built-in designer). For richer results put an Anthropic A
 
 ## Show / hide password (new)
 Every password box (Log In popup and page, Register, Settings, and the popup on all other pages) has an eye button. `client-side/js/password-toggle.js` adds it automatically. The Reset Password page keeps its own eye buttons.
+
+## Delivery by Lalamove, paid separately (new)
+- On the order page the customer chooses **Pick up at the shop** or **Deliver via Lalamove** (receiver's name, mobile, full address). The down payment / full payment is for the **product only**.
+- When the order is **Packing** (or Out for Delivery), open it in Admin > Orders and enter the **Lalamove delivery fee** from the Lalamove app (+ optional booking link) > *Request delivery payment*. The customer then sees "Pay delivery fee" in View Order / Track Order (and gets an email if email is set up) and pays it through PayMongo (GCash / PayMaya).
+- A delivery order can't be set to **Out for Delivery** until the fee is paid (use *Mark delivery fee as paid* if it was paid in cash). The fee is never counted in your revenue.
+
+## Required customer info + price tables (new)
+- **Every order needs a mobile number.** Delivery orders also need the receiver's name, complete home address and a landmark (so the Lalamove rider can find the place). These are saved in My Profile and pre-filled next time. Admin > Orders shows them.
+- **Price table** (Admin > Services > a service > *Choices* > *Price table*): tick the option groups that decide the price (e.g. *Paper size* + *Print color*) and type a price for each combination (A4 + Black & white = 2, A4 + Colored = 3, ...). Customers see the table on the order page and the total updates as they choose. The Our Services card shows "From P2 / page".
+- **Price unit** (Settings): "page", "pc", "set"... shown as "per page".
+- Documents is set up with sample prices the first time; edit them in the admin.

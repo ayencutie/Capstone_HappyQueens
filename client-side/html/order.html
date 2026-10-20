@@ -103,6 +103,7 @@
         <div class="order-block" id="blockChoices">
           <h3>1. Options</h3>
           <div id="choicesBox"></div>
+          <div id="priceTable"></div>
         </div>
 
         <div class="order-block" id="blockDesign">
@@ -149,10 +150,27 @@
           <div id="infoBox"></div>
         </div>
 
+        <div class="order-block" id="blockDelivery">
+          <h3>Contact &amp; delivery</h3>
+          <p class="block-sub">We need your mobile number to reach you about your order.</p>
+          <div class="field"><label for="contactPhone">Your mobile number <span class="req">*</span></label><input type="text" id="contactPhone" placeholder="09XX XXX XXXX"></div>
+          <div class="pay-options">
+            <label><input type="radio" name="fulfillment" value="pickup" checked>
+              <span><b>Pick up at the shop</b><small>Block 4 Lot 24 Satima Village, Talon Dos, Las Pi&ntilde;as City</small></span></label>
+            <label><input type="radio" name="fulfillment" value="delivery">
+              <span><b>Deliver via Lalamove</b><small>The delivery fee is <u>not</u> part of your down payment or full payment. We add the Lalamove rider's rate when your order is being packed, and you pay it then.</small></span></label>
+          </div>
+          <div id="deliveryFields" style="display:none;">
+            <div class="field"><label for="delName">Receiver's name <span class="req">*</span></label><input type="text" id="delName" maxlength="80"></div>
+            <div class="field"><label for="delAddress">Complete home address <span class="req">*</span></label><textarea id="delAddress" maxlength="300" placeholder="House/Unit no., street, barangay, city"></textarea></div>
+            <div class="field"><label for="delLandmark">Landmark <span class="req">*</span></label><input type="text" id="delLandmark" maxlength="150" placeholder="e.g. beside the blue gate, near the 7-Eleven"></div>
+          </div>
+        </div>
+
         <div class="order-block">
           <h3>4. Quantity &amp; payment</h3>
           <div class="field">
-            <label for="qty">Quantity</label>
+            <label for="qty" id="qtyLabel">Quantity</label>
             <input type="number" id="qty" min="1" max="100000" value="1">
           </div>
           <div class="field">

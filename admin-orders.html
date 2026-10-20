@@ -158,9 +158,27 @@
       return '<span class="pay-badge ' + cls + '">' + hqEsc(payment) + '</span>';
     }
 
+    function deliveryHtml(o) {
+      if (o.fulfillment !== 'delivery') return '<div class="admin-modal-row"><span>Fulfillment</span><span>Pick up at the shop</span></div><div class="admin-modal-row"><span>Contact number</span><span>' + hqEsc((o.details && o.details.contactPhone) || '') + '</span></div>';
+      var dv = (o.details && o.details.delivery) || {}, out = '<div class="admin-modal-row"><span>Fulfillment</span><span>Deliver via Lalamove</span></div>' +
+        '<div class="admin-modal-row"><span>Receiver</span><span>' + hqEsc(dv.name || '') + '<br>' + hqEsc((o.details && o.details.contactPhone) || dv.phone || '') + '</span></div>' +
+        '<div class="admin-modal-row"><span>Address</span><span style="white-space:pre-line;text-align:right;">' + hqEsc(dv.address || '') + '</span></div>' +
+        '<div class="admin-modal-row"><span>Landmark</span><span>' + hqEsc(dv.landmark || '') + '</span></div>';
+      if (o.deliveryStatus === 'paid') return out + '<div class="admin-modal-row"><span>Delivery fee</span><span>' + hqPeso(o.deliveryFee) + ' &mdash; paid</span></div>' + (o.lalamoveRef ? '<div class="admin-modal-row"><span>Lalamove ref</span><span>' + hqEsc(o.lalamoveRef) + '</span></div>' : '');
+      if (o.status === 'cancelled') return out;
+      out += '<div class="admin-modal-field"><label for="delFeeInput">Lalamove delivery fee (&#8369;) &mdash; ' + (o.deliveryFee > 0 ? 'requested: ' + hqPeso(o.deliveryFee) + ', not paid yet' : 'not requested yet') + '</label>' +
+        '<input type="number" id="delFeeInput" min="20" step="0.01" value="' + (o.deliveryFee > 0 ? o.deliveryFee : '') + '" placeholder="Rate from the Lalamove app">' +
+        '<input type="text" id="delRefInput" value="' + hqEsc(o.lalamoveRef || '') + '" placeholder="Lalamove booking / tracking link (optional)" style="margin-top:8px;">' +
+        '<p class="admin-modal-hint">The customer sees this fee, and can pay it, only when the order is <b>Packing</b> or <b>Out for Delivery</b>. The order can go out for delivery after it is paid.</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button type="button" class="btn btn-outline" id="delFeeBtn">' + (o.deliveryFee > 0 ? 'Update delivery fee' : 'Request delivery payment') + '</button>' +
+        (o.deliveryFee > 0 ? '<button type="button" class="btn btn-outline" id="delPaidBtn">Mark delivery fee as paid</button>' : '') + '</div></div>';
+      return out;
+    }
     function paySub(o) {
       if (o.status === 'cancelled' && o.amountPaid > 0) return { refunded: 'Refunded', processing: 'Refund processing', manual: 'REFUND NEEDED', none: 'Refund not started' }[o.refundStatus] || '';
-      return { paid: 'Paid in full', partial: 'Down payment paid', unpaid: 'Not paid yet' }[o.payStatus] || '';
+      var base = { paid: 'Paid in full', partial: 'Down payment paid', unpaid: 'Not paid yet' }[o.payStatus] || '';
+      if (o.fulfillment === 'delivery' && o.status !== 'cancelled') base += ' \u00B7 Delivery: ' + (o.deliveryStatus === 'paid' ? 'fee paid' : o.deliveryFee > 0 ? 'fee unpaid' : 'no fee yet');
+      return base;
     }
     function refundHtml(o) {
       if (o.status !== 'cancelled' || o.amountPaid <= 0) return '';
@@ -266,6 +284,7 @@
           '<div class="admin-modal-row"><span>Balance to collect</span><span>' + hqPeso(order.status === 'cancelled' ? 0 : Math.max(0, order.total - order.amountPaid)) + '</span></div>' +
           refundHtml(order) +
           (order.status !== 'cancelled' && order.payStatus !== 'paid' && order.payStatus !== 'unpaid' ? '<div class="admin-modal-field"><button type="button" class="btn btn-outline" id="markPaidBtn">Mark balance as paid (cash on pickup)</button></div>' : '') +
+          deliveryHtml(order) +
           infoHtml(order) +
           statusField +
           '<div class="admin-modal-actions"><button type="button" class="btn btn-outline" id="orderModalCancel">Close</button></div>';
@@ -278,8 +297,26 @@
           if (!r.ok) { alert(r.error || 'Could not update the status.'); this.value = previous; return; }
           order.status = this.value;
           renderOrders();
+          if (r.needsDeliveryFee) { alert('This order is for delivery. Enter the Lalamove delivery fee below so the customer can pay it.'); openOrderModal(order.dbId); }
         });
         document.getElementById('orderModalCancel').addEventListener('click', closeOrderModal);
+        var df = document.getElementById('delFeeBtn'), dp = document.getElementById('delPaidBtn');
+        if (df) df.addEventListener('click', async function () {
+          var fee = parseFloat(document.getElementById('delFeeInput').value);
+          if (!fee || fee < 20) { alert('Enter the Lalamove fee (at least 20 pesos).'); return; }
+          df.disabled = true;
+          var r = await hqAdmin('order_delivery_fee', { id: order.dbId, fee: fee, ref: document.getElementById('delRefInput').value });
+          if (!r.ok) { alert(r.error || 'Could not save.'); df.disabled = false; return; }
+          order.deliveryFee = fee; order.deliveryStatus = 'unpaid'; order.lalamoveRef = document.getElementById('delRefInput').value || null;
+          renderOrders(); openOrderModal(order.dbId);
+          alert(order.status === 'packing' || order.status === 'out-for-delivery' ? 'Saved. The customer can now pay the delivery fee.' : 'Saved. The customer will be asked to pay it once the order is Packing.');
+        });
+        if (dp) dp.addEventListener('click', async function () {
+          if (!confirm('Mark the delivery fee as paid? Only do this if you really received it.')) return;
+          var r = await hqAdmin('order_delivery_paid', { id: order.dbId });
+          if (!r.ok) return alert(r.error || 'Could not update.');
+          order.deliveryStatus = 'paid'; renderOrders(); openOrderModal(order.dbId);
+        });
         var rr = document.getElementById('retryRefundBtn'), rd = document.getElementById('doneRefundBtn');
         if (rr) rr.addEventListener('click', async function () {
           rr.disabled = true;

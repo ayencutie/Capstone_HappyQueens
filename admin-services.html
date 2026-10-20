@@ -162,6 +162,7 @@
             </div>
 
             <div id="optionGroupsList"></div>
+          <div id="priceTableBox"></div>
           </div>
 
           <!-- Settings tab -->
@@ -236,6 +237,11 @@
               <div class="admin-modal-field">
                 <label for="detailSettingsTextPos">Where the info text goes</label>
                 <select id="detailSettingsTextPos"><option value="center">Centered on the design</option><option value="bottom">Caption below the design (e.g. a name under a 1x1 photo)</option></select>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsUnit">Price unit (what the price is "per")</label>
+                <input type="text" id="detailSettingsUnit" class="admin-modal-input" maxlength="20" placeholder="pc, page, set...">
+                <p class="admin-modal-hint">Shown to the customer, e.g. "&#8369;2 per page". For Documents use "page".</p>
               </div>
               <div class="admin-modal-field">
                 <label>Cut shapes (for keychains, magnets...)</label>

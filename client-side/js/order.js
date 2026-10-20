@@ -14,6 +14,11 @@ hqOnReady(async function () {
   $('orderTitle').textContent = 'Order: ' + svc.name;
   $('orderSub').textContent = svc.description || 'Customize it, preview it, and pay a down payment to start.';
   if (!svc.needsInfo) svc.infoFields = [];   // this service doesn't ask the customer for any info
+  var unitName = svc.unitLabel || 'pc';
+  svc.priceMatrix = svc.priceMatrix || { groups: [], prices: {} };
+  if (Array.isArray(svc.priceMatrix.prices)) svc.priceMatrix.prices = {};
+  var prices = svc.priceMatrix.prices;
+  var mGroups = (svc.priceMatrix.groups || []).filter(function (gid) { return svc.choices.some(function (g) { return g.id === gid; }); });
 
   var cutShapes = svc.cutShapes || [], hasCut = cutShapes.length > 0;
   var A = svc.ratioW || 5, B = svc.ratioH || 7, square = Math.abs(A - B) < 0.01;
@@ -23,7 +28,7 @@ hqOnReady(async function () {
     shape: (svc.shapes && svc.shapes[0]) || 'no-fold', occasion: null,
     orientation: A > B ? 'landscape' : 'portrait',
     cutShape: hasCut ? cutShapes[0] : null, subject: null, serverSubject: false, tol: 40,
-    bg: '#cfe0e6'
+    bg: '#cfe0e6', fulfillment: 'pickup'
   };
   var is3d = svc.previewMode === '3d', viewer = null, product = svc.productType || 'paper';
   var cv = { cover: document.createElement('canvas'), insideL: document.createElement('canvas'), insideR: document.createElement('canvas'), back: document.createElement('canvas'), edge: document.createElement('canvas') };
@@ -149,23 +154,41 @@ hqOnReady(async function () {
     $('previewHint').textContent = 'This is a preview. Final colors may look slightly different when printed.';
   }
 
-  // ---------------- 1. options (choices) ----------------
+  // ---------------- 1. options (choices) + price table ----------------
+  function isMatrixGroup(g) { return mGroups.indexOf(g.id) !== -1; }
+  function isReq(g) { return g.required || isMatrixGroup(g); }
   if (!svc.choices.length) $('blockChoices').style.display = 'none';
   $('choicesBox').innerHTML = svc.choices.map(function (g, gi) {
-    var none = g.required ? '' : '<label><input type="radio" name="ch' + gi + '" value="" checked> None</label>';
-    return '<div class="choice-group"><strong>' + esc(g.name) + (g.required ? ' <span style="color:#c0392b">*</span>' : '') + '</strong><div class="choice-list">' + none +
+    var none = isReq(g) ? '' : '<label><input type="radio" name="ch' + gi + '" value="" checked> None</label>';
+    return '<div class="choice-group"><strong>' + esc(g.name) + (isReq(g) ? ' <span style="color:#c0392b">*</span>' : '') + '</strong><div class="choice-list">' + none +
       g.options.map(function (o, oi) {
-        return '<label><input type="radio" name="ch' + gi + '" value="' + esc(o.name) + '"' + (g.required && oi === 0 ? ' checked' : '') + '> ' + esc(o.name) + (o.price ? ' <em>+' + peso(o.price) + '</em>' : '') + '</label>';
+        return '<label><input type="radio" name="ch' + gi + '" value="' + esc(o.name) + '"' + (isReq(g) && oi === 0 ? ' checked' : '') + '> ' + esc(o.name) + (o.price && !isMatrixGroup(g) ? ' <em>+' + peso(o.price) + '</em>' : '') + '</label>';
       }).join('') + '</div></div>';
   }).join('');
-  svc.choices.forEach(function (g) { if (g.required && g.options.length) st.choices[g.name] = g.options[0].name; });
+  svc.choices.forEach(function (g) { if (isReq(g) && g.options.length) st.choices[g.name] = g.options[0].name; });
+
+  // the price list the customer can see (price for every combination)
+  function renderPriceTable() {
+    var box = $('priceTable');
+    if (!mGroups.length) { box.innerHTML = ''; return; }
+    var gs = mGroups.map(function (gid) { return svc.choices.find(function (g) { return g.id === gid; }); });
+    var combos = [[]];
+    gs.forEach(function (g) { var next = []; combos.forEach(function (c) { g.options.forEach(function (o) { next.push(c.concat([{ g: g, o: o }])); }); }); combos = next; });
+    box.innerHTML = '<table class="price-table"><thead><tr><th>' + gs.map(function (g) { return esc(g.name); }).join(' &middot; ') + '</th><th>Price per ' + esc(unitName) + '</th></tr></thead><tbody>' +
+      combos.map(function (c) {
+        var key = c.map(function (x) { return x.o.id; }).join('|'), p = Number(prices[key]) || 0;
+        var sel = c.every(function (x) { return st.choices[x.g.name] === x.o.name; });
+        return '<tr class="' + (sel ? 'is-selected' : '') + '"><td>' + c.map(function (x) { return esc(x.o.name); }).join(' &middot; ') + '</td><td>' + (p > 0 ? peso(p) : '<em>not set</em>') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
   $('choicesBox').querySelectorAll('input[type=radio]').forEach(function (inp) {
     inp.addEventListener('change', function () {
       var gi = parseInt(inp.name.slice(2), 10), g = svc.choices[gi];
       if (inp.value) st.choices[g.name] = inp.value; else delete st.choices[g.name];
-      updateSummary();
+      updateSummary(); renderPriceTable();
     });
   });
+  renderPriceTable();
 
   // ---------------- 2. design ----------------
   var hasTemplates = svc.needsTemplate && svc.templates.length > 0;
@@ -320,29 +343,50 @@ hqOnReady(async function () {
 
   // ---------------- 4. quantity, payment, summary ----------------
   function calc() {
-    var base = parseFloat(((String(svc.priceText).match(/\d+(\.\d+)?/)) || ['0'])[0]) || 0, extra = 0;
-    svc.choices.forEach(function (g) { var pick = st.choices[g.name]; g.options.forEach(function (o) { if (o.name === pick) extra += Number(o.price) || 0; }); });
+    var base = 0, extra = 0, missing = false;
+    svc.choices.forEach(function (g) {
+      if (isMatrixGroup(g)) return;                       // those groups are priced by the price table
+      var pick = st.choices[g.name]; g.options.forEach(function (o) { if (o.name === pick) extra += Number(o.price) || 0; });
+    });
+    if (mGroups.length) {
+      var key = mGroups.map(function (gid) {
+        var g = svc.choices.find(function (x) { return x.id === gid; }), o = g && g.options.find(function (x) { return x.name === st.choices[g.name]; });
+        return o ? o.id : '';
+      }).join('|');
+      base = Number(prices[key]) || 0; if (base <= 0) missing = true;
+    } else base = parseFloat(((String(svc.priceText).match(/\d+(\.\d+)?/)) || ['0'])[0]) || 0;
     var unit = base + extra, totalC = Math.round(unit * st.qty * 100);
     var dueC = st.payOption === 'full' ? totalC : Math.ceil(totalC * svc.downpaymentPercent / 100);
-    return { unit: unit, total: totalC / 100, due: dueC / 100, balance: (totalC - dueC) / 100 };
+    return { unit: unit, total: totalC / 100, due: dueC / 100, balance: (totalC - dueC) / 100, missing: missing };
   }
   function updateSummary() {
     var c = calc();
     if (c.total <= 0) {
-      $('summary').innerHTML = '<div class="summary-row">This service has no price yet. Please contact us to order.</div>'; $('payBtn').disabled = true; $('payBtn').textContent = 'Not available'; return;
+      $('summary').innerHTML = '<div class="summary-row">' + (c.missing ? 'The price for this choice is not set yet. Please pick another option, or contact us.' : 'This service has no price yet. Please contact us to order.') + '</div>'; $('payBtn').disabled = true; $('payBtn').textContent = 'Not available'; return;
     }
     $('summary').innerHTML =
-      '<div class="summary-row"><span>Price each</span><span>' + peso(c.unit) + '</span></div>' +
+      '<div class="summary-row"><span>Price per ' + esc(unitName) + '</span><span>' + peso(c.unit) + '</span></div>' +
       '<div class="summary-row"><span>Quantity</span><span>' + st.qty + '</span></div>' +
       '<div class="summary-row is-total"><span>Total</span><span>' + peso(c.total) + '</span></div>' +
       '<div class="summary-row is-due"><span>' + (st.payOption === 'full' ? 'Pay now' : 'Pay now (' + svc.downpaymentPercent + '% down payment)') + '</span><span>' + peso(c.due) + '</span></div>' +
-      (c.balance > 0 ? '<div class="summary-row"><span>Balance (pay on pickup / delivery)</span><span>' + peso(c.balance) + '</span></div>' : '');
+      (c.balance > 0 ? '<div class="summary-row"><span>Balance (pay on pickup / delivery)</span><span>' + peso(c.balance) + '</span></div>' : '') +
+      (st.fulfillment === 'delivery' ? '<div class="summary-row"><span>Lalamove delivery fee</span><span>Added when packing</span></div>' : '');
     $('payBtn').disabled = false;
     $('payBtn').textContent = 'Pay ' + peso(c.due) + ' with GCash / PayMaya';
   }
   $('optDownLabel').textContent = svc.downpaymentPercent + '% down payment';
+  if (unitName !== 'pc') $('qtyLabel').textContent = 'Quantity (number of ' + unitName + 's)';
   $('qty').addEventListener('input', function () { st.qty = Math.max(1, Math.min(100000, parseInt(this.value, 10) || 1)); updateSummary(); });
   document.querySelectorAll('input[name=payOption]').forEach(function (inp) { inp.addEventListener('change', function () { st.payOption = inp.value; updateSummary(); }); });
+
+  // pickup or delivery (Lalamove). The delivery fee is asked later, when the order is packing.
+  function syncFulfillment() { $('deliveryFields').style.display = st.fulfillment === 'delivery' ? '' : 'none'; updateSummary(); }
+  document.querySelectorAll('input[name=fulfillment]').forEach(function (inp) { inp.addEventListener('change', function () { st.fulfillment = inp.value; syncFulfillment(); }); });
+  hqApi('profile').then(function (pr) {   // use what the customer saved in My Profile
+    if (!pr.ok) return;
+    $('contactPhone').value = pr.profile.contactNo; $('delName').value = pr.profile.firstName + ' ' + pr.profile.lastName;
+    $('delAddress').value = pr.profile.address || ''; $('delLandmark').value = pr.profile.landmark || '';
+  });
 
   function snapshot() {
     var s = size(1200), c = document.createElement('canvas');
@@ -356,7 +400,13 @@ hqOnReady(async function () {
       var f = svc.infoFields[i];
       if (f.required && !String(st.values[f.key] || '').trim()) { alert('Please fill in: ' + f.label); $('f_' + f.key).focus(); return; }
     }
-    for (var g = 0; g < svc.choices.length; g++) if (svc.choices[g].required && !st.choices[svc.choices[g].name]) { alert('Please choose: ' + svc.choices[g].name); return; }
+    for (var g = 0; g < svc.choices.length; g++) if (isReq(svc.choices[g]) && !st.choices[svc.choices[g].name]) { alert('Please choose: ' + svc.choices[g].name); return; }
+    if (!/^(09|\+639)\d{9}$/.test($('contactPhone').value.replace(/[\s-]/g, ''))) { alert('Please enter your mobile number (09XX XXX XXXX).'); $('contactPhone').focus(); return; }
+    if (st.fulfillment === 'delivery') {
+      if (!$('delName').value.trim()) { alert("Please enter the receiver's name."); $('delName').focus(); return; }
+      if ($('delAddress').value.trim().length < 10) { alert('Please enter your complete home address.'); $('delAddress').focus(); return; }
+      if ($('delLandmark').value.trim().length < 3) { alert('Please enter a landmark near your address.'); $('delLandmark').focus(); return; }
+    }
     if (st.uploading) { alert('Your design is still uploading. Please wait a moment.'); return; }
     var design = st.uploadPath ? { source: 'upload', path: st.uploadPath } : st.templateId ? { source: 'template', templateId: st.templateId } : (st.spec && st.prompt) ? { source: 'ai', prompt: st.prompt, spec: st.spec } : { source: 'none' };
     if (hasCut && st.cutShape === 'photo' && !st.subject) { alert('Please upload your photo first (Design > Upload your own design).'); return; }
@@ -365,7 +415,9 @@ hqOnReady(async function () {
 
     var btn = $('payBtn'); btn.disabled = true; btn.textContent = 'Taking you to PayMongo\u2026';
     var res = await hqShop('create_order', {
-      serviceId: svc.id, qty: st.qty, payOption: st.payOption, shape: st.shape, orientation: st.orientation, cutShape: st.cutShape,
+      serviceId: svc.id, qty: st.qty, payOption: st.payOption, shape: st.shape,
+      contactPhone: $('contactPhone').value, fulfillment: st.fulfillment,
+      delivery: st.fulfillment === 'delivery' ? { name: $('delName').value, address: $('delAddress').value, landmark: $('delLandmark').value } : null, orientation: st.orientation, cutShape: st.cutShape,
       info: st.values, design: design,
       selections: Object.keys(st.choices).map(function (k) { return { group: k, option: st.choices[k] }; }),
       notes: $('notes').value, previewPng: snapshot()

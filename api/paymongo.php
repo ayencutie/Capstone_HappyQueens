@@ -95,3 +95,46 @@ function apply_refund(array $o, array $res) {
     db()->prepare('UPDATE orders SET refund_status=?, refund_amount=?, refund_id=?, refund_note=?, payment_id=COALESCE(?, payment_id) WHERE id=?')
         ->execute([$res['status'], $res['status'] === 'none' ? 0 : $o['amount_paid'], $res['id'], $res['note'], $res['payment_id'], $o['id']]);
 }
+
+
+// ---- Lalamove delivery fee: a separate PayMongo payment, asked when the order is packing / out for delivery ----
+function paymongo_delivery_checkout($code, $feeCents) {
+    $back = site_base() . '/client-side/html/order-complete.html?order=' . urlencode($code) . '&delivery=1';
+    $r = paymongo_call('POST', '/checkout_sessions', ['data' => ['attributes' => [
+        'line_items' => [['currency' => 'PHP', 'amount' => (int)$feeCents, 'name' => 'Lalamove delivery fee', 'quantity' => 1, 'description' => 'Order ' . $code]],
+        'payment_method_types' => ['gcash', 'paymaya'],
+        'success_url' => $back, 'cancel_url' => $back . '&cancelled=1',
+        'description' => "Happy Queen's Crafty House delivery fee for order " . $code,
+        'reference_number' => $code . '-DELIVERY', 'send_email_receipt' => false, 'show_description' => true, 'show_line_items' => true,
+        'metadata' => ['order_code' => $code, 'type' => 'delivery'],
+    ]]]);
+    return ['id' => $r['data']['id'], 'url' => $r['data']['attributes']['checkout_url']];
+}
+
+function sync_delivery(array $o) {
+    if ($o['delivery_status'] !== 'unpaid' || !$o['delivery_session']) return $o;
+    $r = paymongo_call('GET', '/checkout_sessions/' . rawurlencode($o['delivery_session']));
+    $a = $r['data']['attributes'] ?? [];
+    $paid = false; $payId = null;
+    foreach (($a['payments'] ?? []) as $p) if (($p['attributes']['status'] ?? '') === 'paid') { $paid = true; $payId = $p['id'] ?? null; }
+    if (!$paid && (($a['payment_intent']['attributes']['status'] ?? '') === 'succeeded')) $paid = true;
+    if ($paid) {
+        db()->prepare("UPDATE orders SET delivery_status='paid', delivery_payment_id=?, delivery_paid_at=NOW() WHERE id=? AND delivery_status='unpaid'")->execute([$payId, $o['id']]);
+        $s = db()->prepare('SELECT * FROM orders WHERE id=?'); $s->execute([$o['id']]);
+        return $s->fetch();
+    }
+    return $o;
+}
+
+// Tells the customer (by email, if email is set up) that the delivery fee is ready to pay. Never stops the admin if it fails.
+function notify_delivery_fee($orderId) {
+    try {
+        $q = db()->prepare('SELECT o.order_code, o.delivery_fee, u.email, u.first_name FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id=?');
+        $q->execute([$orderId]); $r = $q->fetch();
+        if (!$r) return;
+        if (APP_DEBUG || MAIL_USER === '' || MAIL_PASS === '') { error_log('Delivery fee email not sent (email not set up): ' . $r['email']); return; }
+        smtp_send($r['email'], 'Delivery fee for your order ' . $r['order_code'],
+            "Hi " . $r['first_name'] . ",\r\n\r\nYour order " . $r['order_code'] . " is being prepared for delivery.\r\nThe Lalamove delivery fee is PHP " . number_format((float)$r['delivery_fee'], 2) .
+            ".\r\nPlease pay it so we can book your rider: " . site_base() . "/client-side/html/orders.html\r\n\r\nThank you!\r\nHappy Queen's Crafty House");
+    } catch (Throwable $e) { error_log('Delivery fee email failed: ' . $e->getMessage()); }
+}
