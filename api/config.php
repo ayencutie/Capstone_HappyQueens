@@ -28,6 +28,9 @@ cfg_default('DOWNPAYMENT_PERCENT', 50);
 // AI design suggestions (optional - without a key the built-in designer is used)
 cfg_default('ANTHROPIC_API_KEY', '');
 cfg_default('AI_MODEL', 'claude-sonnet-5-5');
+cfg_default('OPENAI_API_KEY', '');             // an OpenAI key (sk-...) also works for the AI design prompt
+cfg_default('OPENAI_MODEL', 'gpt-4o-mini');
+cfg_default('OPENAI_IMAGE_MODEL', 'gpt-image-1');   // used to EDIT a customer's picture with a prompt
 
 // Background removal for photo keychains / magnets: rembg (Python) installed on this computer.
 cfg_default('REMBG_PYTHON', 'C:\\rembg-env\\Scripts\\python.exe');

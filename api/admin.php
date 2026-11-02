@@ -42,6 +42,10 @@ try {
             'cut_shapes'     => json_encode(clean_cut_shapes($in['cutShapes'] ?? [])),
             'cut_hole'       => !empty($in['cutHole']) ? 1 : 0,
             'product_type'   => pick($in['productType'] ?? 'paper', ['paper', 'photo', 'sticker', 'magnet', 'keychain'], 'paper'),
+            'upload_kind'    => pick($in['uploadKind'] ?? 'design', ['design', 'photos', 'document'], 'design'),
+            'ai_mode'        => pick($in['aiMode'] ?? 'design', ['design', 'edit'], 'design'),
+            'frame_style'    => pick($in['frameStyle'] ?? '', ['', 'instax', 'strip'], ''),
+            'double_sided'   => !empty($in['doubleSided']) ? 1 : 0,
             'needs_info'     => array_key_exists('needsInfo', $in) ? (!empty($in['needsInfo']) ? 1 : 0) : 1,
             'upload_enabled' => array_key_exists('uploadEnabled', $in) ? (!empty($in['uploadEnabled']) ? 1 : 0) : 1,
         ];
@@ -135,16 +139,21 @@ try {
 
     // ---------------- Orders ----------------
     case 'orders':
-        $rows = db()->query("SELECT o.*, CONCAT(u.first_name,' ',u.last_name) AS customer
-                             FROM orders o LEFT JOIN users u ON u.id = o.user_id ORDER BY o.id DESC")->fetchAll();
+        $oid = (int)($_GET['id'] ?? 0);   // ?id=... returns just that order (used by the product viewer)
+        $q = db()->prepare("SELECT o.*, CONCAT(u.first_name,' ',u.last_name) AS customer, s.product_type, s.cut_hole, s.preview_mode, s.frame_style, s.upload_kind, s.double_sided
+                            FROM orders o LEFT JOIN users u ON u.id = o.user_id LEFT JOIN services s ON s.id = o.service_id" . ($oid ? ' WHERE o.id = ?' : '') . ' ORDER BY o.id DESC');
+        $q->execute($oid ? [$oid] : []);
+        $rows = $q->fetchAll();
         out(['ok' => true, 'orders' => array_map(function ($o) {
             return ['dbId' => (int)$o['id'], 'id' => $o['order_code'], 'customer' => $o['customer'] ?: 'Deleted customer',
                     'service' => $o['service_name'], 'qty' => (int)$o['qty'], 'total' => (float)$o['total'],
                     'payment' => $o['payment'], 'status' => $o['status'], 'date' => substr($o['created_at'], 0, 10),
                     'payStatus' => $o['payment_status'], 'payOption' => $o['pay_option'], 'amountDue' => (float)$o['amount_due'],
-                    'amountPaid' => (float)$o['amount_paid'], 'designImage' => $o['design_image'],
+                    'amountPaid' => (float)$o['amount_paid'], 'designImage' => $o['design_image'], 'designBackImage' => $o['design_back_image'], 'designInsideImage' => $o['design_inside_image'],
                     'refundStatus' => $o['refund_status'], 'refundAmount' => (float)$o['refund_amount'], 'refundNote' => $o['refund_note'],
                     'fulfillment' => $o['fulfillment'], 'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status'], 'lalamoveRef' => $o['lalamove_ref'],
+                    'serviceId' => (int)$o['service_id'], 'product' => $o['product_type'] ?? 'paper', 'cutHole' => !empty($o['cut_hole']), 'previewMode' => $o['preview_mode'] ?? 'flat',
+                    'frameStyle' => $o['frame_style'] ?? '', 'uploadKind' => $o['upload_kind'] ?? 'design', 'doubleSided' => !empty($o['double_sided']),
                     'details' => json_list($o['details'])];
         }, $rows)]);
 
@@ -155,30 +164,23 @@ try {
         $o = $q->fetch();
         if (!$o) fail('Order not found.', 404);
         if ($o['status'] === 'cancelled' || $o['status'] === 'completed') fail('This order is locked.');
-        // a delivery order can only go out after the customer paid the Lalamove fee
-        if ($o['fulfillment'] === 'delivery' && $status === 'out-for-delivery' && $o['delivery_status'] !== 'paid') {
-            if ((float)$o['delivery_fee'] <= 0) fail('Enter the Lalamove delivery fee first (open the order > "Request delivery payment").');
-            fail('The customer has not paid the delivery fee yet.');
+        $balance = round((float)$o['total'] - (float)$o['amount_paid'], 2);
+        // a delivery order goes out only when the customer paid the balance and the Lalamove fee (paid to the rider, COD) is known
+        if ($o['fulfillment'] === 'delivery' && $status === 'out-for-delivery') {
+            if ((float)$o['delivery_fee'] <= 0) fail('Enter the Lalamove delivery fee first (open the order > Lalamove delivery fee). The customer pays it to the rider.');
+            if ($balance > 0.009) fail('The customer has not paid the balance of ' . "\u{20B1}" . number_format($balance, 2) . ' yet. They pay it in View Order (they get a reminder at Packing). Wait for the payment, or tap "Mark balance as paid" if they paid in cash.');
         }
         db()->prepare("UPDATE orders SET status=? WHERE id=? AND status NOT IN ('cancelled','completed')")->execute([$status, $id]);
-        $isDelivery = $o['fulfillment'] === 'delivery' && in_array($status, ['packing', 'out-for-delivery'], true);
-        if ($isDelivery && $o['delivery_status'] === 'unpaid' && (float)$o['delivery_fee'] > 0 && $status === 'packing') notify_delivery_fee($id);
-        out(['ok' => true, 'needsDeliveryFee' => $isDelivery && (float)$o['delivery_fee'] <= 0]);
+        if ($status === 'packing' && $balance > 0.009) notify_balance_due($id);   // reminder: pay the balance in View Order
+        out(['ok' => true, 'needsDeliveryFee' => $o['fulfillment'] === 'delivery' && (float)$o['delivery_fee'] <= 0 && in_array($status, ['packing', 'out-for-delivery'], true)]);
 
-    case 'order_delivery_fee':    // the Lalamove rate the admin got from the app
+    case 'order_delivery_fee':    // the Lalamove rate from the app. The customer pays it to the rider on delivery (COD), not online.
         $id = (int)($in['id'] ?? 0); $fee = round((float)($in['fee'] ?? 0), 2); $ref = clean_text($in['ref'] ?? '', 190);
         $q = db()->prepare('SELECT * FROM orders WHERE id=?'); $q->execute([$id]); $o = $q->fetch();
         if (!$o || $o['fulfillment'] !== 'delivery') fail('This order is not for delivery.');
         if ($o['status'] === 'cancelled') fail('This order was cancelled.');
-        if ($o['delivery_status'] === 'paid') fail('The delivery fee was already paid.');
-        if ($fee < 20 || $fee > 20000) fail('Enter the Lalamove fee (at least ' . "\u{20B1}" . '20).');
-        db()->prepare("UPDATE orders SET delivery_fee=?, delivery_status='unpaid', delivery_session=NULL, lalamove_ref=? WHERE id=?")->execute([$fee, $ref !== '' ? $ref : null, $id]);
-        if (in_array($o['status'], ['packing', 'out-for-delivery'], true)) notify_delivery_fee($id);
-        out(['ok' => true]);
-
-    case 'order_delivery_paid':   // e.g. the customer paid the rider fee in cash or by bank transfer
-        $id = (int)($in['id'] ?? 0);
-        db()->prepare("UPDATE orders SET delivery_status='paid', delivery_paid_at=NOW() WHERE id=? AND fulfillment='delivery' AND delivery_fee > 0 AND status <> 'cancelled'")->execute([$id]);
+        if ($fee < 1 || $fee > 20000) fail('Enter the Lalamove delivery fee (the amount the customer pays the rider).');
+        db()->prepare("UPDATE orders SET delivery_fee=?, delivery_status='cod', delivery_session=NULL, lalamove_ref=? WHERE id=?")->execute([$fee, $ref !== '' ? $ref : null, $id]);
         out(['ok' => true]);
 
     case 'dashboard':
@@ -213,7 +215,8 @@ try {
         $rows = db()->query('SELECT * FROM inquiries ORDER BY id DESC LIMIT 300')->fetchAll();
         out(['ok' => true, 'inquiries' => array_map(function ($r) {
             return ['id' => (int)$r['id'], 'name' => $r['name'], 'contact' => $r['contact'], 'service' => $r['service_name'], 'qty' => (int)$r['qty'],
-                    'details' => $r['details'], 'files' => json_list($r['files']), 'status' => $r['status'], 'date' => substr($r['created_at'], 0, 10)];
+                    'details' => $r['details'], 'files' => json_list($r['files']), 'status' => $r['status'], 'date' => substr($r['created_at'], 0, 10),
+                    'email' => $r['email'] ?? '', 'guest' => $r['user_id'] === null];
         }, $rows)]);
 
     case 'inquiry_status':

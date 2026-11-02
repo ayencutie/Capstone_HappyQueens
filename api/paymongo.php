@@ -32,7 +32,7 @@ function site_base() {
 // Creates the hosted checkout page for the amount due now. Returns ['id'=>..., 'url'=>...]
 function paymongo_checkout($code, $serviceName, $dueCents, $payOption) {
     $label = $payOption === 'down' ? 'Down payment (' . DOWNPAYMENT_PERCENT . '%)' : 'Full payment';
-    $back = site_base() . '/client-side/html/order-complete.html?order=' . urlencode($code);
+    $back = site_base() . '/client-side/with-account/order-complete.html?order=' . urlencode($code);
     $r = paymongo_call('POST', '/checkout_sessions', ['data' => ['attributes' => [
         'line_items' => [['currency' => 'PHP', 'amount' => (int)$dueCents, 'name' => $label . ' - ' . $serviceName, 'quantity' => 1, 'description' => 'Order ' . $code]],
         'payment_method_types' => ['gcash', 'paymaya'],
@@ -98,43 +98,46 @@ function apply_refund(array $o, array $res) {
 
 
 // ---- Lalamove delivery fee: a separate PayMongo payment, asked when the order is packing / out for delivery ----
-function paymongo_delivery_checkout($code, $feeCents) {
-    $back = site_base() . '/client-side/html/order-complete.html?order=' . urlencode($code) . '&delivery=1';
+// Tells the customer (by email, if email is set up) that the delivery fee is ready to pay. Never stops the admin if it fails.
+
+// The balance (what is left after the down payment) is paid in View Order from the Packing step on, before a delivery order goes out.
+function paymongo_balance_checkout($code, $balanceCents) {
+    $back = site_base() . '/client-side/with-account/order-complete.html?order=' . urlencode($code) . '&balance=1';
     $r = paymongo_call('POST', '/checkout_sessions', ['data' => ['attributes' => [
-        'line_items' => [['currency' => 'PHP', 'amount' => (int)$feeCents, 'name' => 'Lalamove delivery fee', 'quantity' => 1, 'description' => 'Order ' . $code]],
+        'line_items' => [['currency' => 'PHP', 'amount' => (int)$balanceCents, 'name' => 'Balance for order ' . $code, 'quantity' => 1, 'description' => 'Remaining balance']],
         'payment_method_types' => ['gcash', 'paymaya'],
         'success_url' => $back, 'cancel_url' => $back . '&cancelled=1',
-        'description' => "Happy Queen's Crafty House delivery fee for order " . $code,
-        'reference_number' => $code . '-DELIVERY', 'send_email_receipt' => false, 'show_description' => true, 'show_line_items' => true,
-        'metadata' => ['order_code' => $code, 'type' => 'delivery'],
+        'description' => "Happy Queen's Crafty House balance for order " . $code,
+        'reference_number' => $code . '-BALANCE', 'send_email_receipt' => false, 'show_description' => true, 'show_line_items' => true,
+        'metadata' => ['order_code' => $code, 'type' => 'balance'],
     ]]]);
     return ['id' => $r['data']['id'], 'url' => $r['data']['attributes']['checkout_url']];
 }
-
-function sync_delivery(array $o) {
-    if ($o['delivery_status'] !== 'unpaid' || !$o['delivery_session']) return $o;
-    $r = paymongo_call('GET', '/checkout_sessions/' . rawurlencode($o['delivery_session']));
+function sync_balance(array $o) {
+    if ($o['payment_status'] === 'paid' || empty($o['balance_session'])) return $o;
+    $r = paymongo_call('GET', '/checkout_sessions/' . rawurlencode($o['balance_session']));
     $a = $r['data']['attributes'] ?? [];
     $paid = false; $payId = null;
     foreach (($a['payments'] ?? []) as $p) if (($p['attributes']['status'] ?? '') === 'paid') { $paid = true; $payId = $p['id'] ?? null; }
     if (!$paid && (($a['payment_intent']['attributes']['status'] ?? '') === 'succeeded')) $paid = true;
     if ($paid) {
-        db()->prepare("UPDATE orders SET delivery_status='paid', delivery_payment_id=?, delivery_paid_at=NOW() WHERE id=? AND delivery_status='unpaid'")->execute([$payId, $o['id']]);
+        db()->prepare("UPDATE orders SET amount_paid = total, payment_status = 'paid', balance_payment_id = ?, balance_paid_at = NOW() WHERE id = ? AND payment_status <> 'paid' AND status <> 'cancelled'")->execute([$payId, $o['id']]);
         $s = db()->prepare('SELECT * FROM orders WHERE id=?'); $s->execute([$o['id']]);
         return $s->fetch();
     }
     return $o;
 }
-
-// Tells the customer (by email, if email is set up) that the delivery fee is ready to pay. Never stops the admin if it fails.
-function notify_delivery_fee($orderId) {
+function notify_balance_due($orderId) {
     try {
-        $q = db()->prepare('SELECT o.order_code, o.delivery_fee, u.email, u.first_name FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id=?');
+        $q = db()->prepare('SELECT o.order_code, o.total, o.amount_paid, o.delivery_fee, o.fulfillment, u.email, u.first_name FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id=?');
         $q->execute([$orderId]); $r = $q->fetch();
         if (!$r) return;
-        if (APP_DEBUG || MAIL_USER === '' || MAIL_PASS === '') { error_log('Delivery fee email not sent (email not set up): ' . $r['email']); return; }
-        smtp_send($r['email'], 'Delivery fee for your order ' . $r['order_code'],
-            "Hi " . $r['first_name'] . ",\r\n\r\nYour order " . $r['order_code'] . " is being prepared for delivery.\r\nThe Lalamove delivery fee is PHP " . number_format((float)$r['delivery_fee'], 2) .
-            ".\r\nPlease pay it so we can book your rider: " . site_base() . "/client-side/html/orders.html\r\n\r\nThank you!\r\nHappy Queen's Crafty House");
-    } catch (Throwable $e) { error_log('Delivery fee email failed: ' . $e->getMessage()); }
+        if (APP_DEBUG || MAIL_USER === '' || MAIL_PASS === '') { error_log('Balance email not sent (email not set up): ' . $r['email']); return; }
+        $bal = max(0, (float)$r['total'] - (float)$r['amount_paid']);
+        $extra = ($r['fulfillment'] === 'delivery' && (float)$r['delivery_fee'] > 0)
+            ? "\r\nThe Lalamove delivery fee is PHP " . number_format((float)$r['delivery_fee'], 2) . ". You pay it to the rider when your order arrives (cash on delivery).\r\n" : '';
+        smtp_send($r['email'], 'Please pay the balance for your order ' . $r['order_code'],
+            "Hi " . $r['first_name'] . ",\r\n\r\nYour order " . $r['order_code'] . " is now being packed.\r\nThe remaining balance is PHP " . number_format($bal, 2) .
+            ". Please pay it in View Order. We cannot send your order out for delivery until the balance is paid:\r\n" . site_base() . "/client-side/with-account/orders.html\r\n" . $extra . "\r\nThank you!\r\nHappy Queen's Crafty House");
+    } catch (Throwable $e) { error_log('Balance email failed: ' . $e->getMessage()); }
 }
