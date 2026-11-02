@@ -13,6 +13,10 @@ if (isset($_GET['testmail'])) {   // real sending test: ?testmail=you@gmail.com
         exit(APP_DEBUG ? 'APP_DEBUG is true, so it was only written to api/otp-log.txt. Set it to false in config.local.php.' : '✅ Sent! Check the inbox (test code 123456).');
     } catch (Throwable $e) { exit('❌ ' . htmlspecialchars($e->getMessage())); }
 }
+if (isset($_GET['testai'])) {   // does the AI key work?
+    try { $sp = ai_design_spec('gold and white wedding invitation with flowers', 'Invitation Cards'); exit('✅ AI works. Design: ' . htmlspecialchars($sp['name']) . ' | back says: ' . htmlspecialchars(implode(' / ', $sp['back']['lines']))); }
+    catch (Throwable $e) { exit('❌ ' . htmlspecialchars($e->getMessage())); }
+}
 if (isset($_GET['testrembg'])) {   // is rembg installed in that Python?
     $l = []; exec(escapeshellarg(REMBG_PYTHON) . ' -c ' . escapeshellarg("import rembg; print('rembg OK')") . ' 2>&1', $l, $c);
     exit(($c === 0 ? '✅ ' : '❌ ') . htmlspecialchars(implode("\n", $l) ?: 'Python not found at ' . REMBG_PYTHON));
@@ -119,6 +123,10 @@ if ($good) {
         add_col($pdo, 'services', 'ai_enabled', 'TINYINT(1) NOT NULL DEFAULT 1');
         add_col($pdo, 'services', 'upload_enabled', 'TINYINT(1) NOT NULL DEFAULT 1');
         add_col($pdo, 'services', 'info_fields', 'MEDIUMTEXT NULL');
+        $addedKind = add_col($pdo, 'services', 'upload_kind', "VARCHAR(10) NOT NULL DEFAULT 'design'");
+        add_col($pdo, 'services', 'ai_mode', "VARCHAR(6) NOT NULL DEFAULT 'design'");
+        add_col($pdo, 'services', 'frame_style', "VARCHAR(8) NOT NULL DEFAULT ''");
+        add_col($pdo, 'services', 'double_sided', 'TINYINT(1) NOT NULL DEFAULT 0');
         $addedMatrix = add_col($pdo, 'services', 'price_matrix', 'MEDIUMTEXT NULL');
         add_col($pdo, 'services', 'unit_label', "VARCHAR(20) NOT NULL DEFAULT 'pc'");
         add_col($pdo, 'users', 'address', 'VARCHAR(300) NULL');
@@ -133,12 +141,18 @@ if ($good) {
         add_col($pdo, 'orders', 'refund_amount', 'DECIMAL(10,2) NOT NULL DEFAULT 0');
         add_col($pdo, 'orders', 'refund_id', 'VARCHAR(40) NULL');
         add_col($pdo, 'orders', 'refund_note', 'VARCHAR(190) NULL');
+        add_col($pdo, 'orders', 'design_back_image', 'VARCHAR(255) NULL');
+        add_col($pdo, 'orders', 'design_inside_image', 'VARCHAR(255) NULL');
         add_col($pdo, 'orders', 'fulfillment', "VARCHAR(10) NOT NULL DEFAULT 'pickup'");
         add_col($pdo, 'orders', 'delivery_fee', 'DECIMAL(10,2) NOT NULL DEFAULT 0');
         add_col($pdo, 'orders', 'delivery_status', "VARCHAR(10) NOT NULL DEFAULT 'none'");
         add_col($pdo, 'orders', 'delivery_session', 'VARCHAR(80) NULL');
         add_col($pdo, 'orders', 'delivery_payment_id', 'VARCHAR(40) NULL');
         add_col($pdo, 'orders', 'delivery_paid_at', 'DATETIME NULL');
+        add_col($pdo, 'orders', 'balance_session', 'VARCHAR(80) NULL');        // paying the balance at the "Pay Balance" step
+        add_col($pdo, 'orders', 'balance_payment_id', 'VARCHAR(40) NULL');
+        add_col($pdo, 'orders', 'balance_paid_at', 'DATETIME NULL');
+        $pdo->exec("UPDATE orders SET delivery_status='cod' WHERE delivery_fee > 0 AND delivery_status='unpaid'");   // the Lalamove fee is now paid to the rider (COD)
         add_col($pdo, 'orders', 'lalamove_ref', 'VARCHAR(190) NULL');
         $pdo->exec("CREATE TABLE IF NOT EXISTS inquiries (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -150,6 +164,8 @@ if ($good) {
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             INDEX (status),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL) ENGINE=InnoDB");
+        add_col($pdo, 'inquiries', 'email', 'VARCHAR(120) NULL');   // visitors without an account can send inquiries too
+        add_col($pdo, 'inquiries', 'ip', 'VARCHAR(45) NULL');
         if ($addedNeedsInfo) $pdo->exec("UPDATE services SET needs_info=0 WHERE name IN ('Photo Print','Documents')");
         add_col($pdo, 'orders', 'payment_status', "VARCHAR(10) NOT NULL DEFAULT 'unpaid'");
         add_col($pdo, 'orders', 'pay_option', "VARCHAR(6) NOT NULL DEFAULT 'down'");
@@ -196,10 +212,13 @@ if ($good) {
             $pdo->prepare("UPDATE services SET cut_shapes=?, preview_mode='3d', text_position='center', ai_enabled=1 WHERE name IN ('Keychains','Ref Magnets')")->execute([json_encode(['circle', 'triangle', 'square', 'photo'])]);
             $pdo->exec("UPDATE services SET cut_hole=1 WHERE name='Keychains'");
         }
+        // helpers for the starter option groups (sizes in millimetres)
+        $opt = function ($id, $name, $w = 0, $h = 0, $mono = false) { return ['id' => $id, 'name' => $name, 'price' => 0, 'w' => $w, 'h' => $h, 'mono' => $mono, 'note' => '']; };
+        $grp = function ($id, $name, $role, array $options) { return ['id' => $id, 'name' => $name, 'required' => true, 'role' => $role, 'unit' => 'mm', 'options' => $options]; };
         if ($addedMatrix) {   // Documents: a price table (paper size x print color). These prices are SAMPLES: edit them in Admin > Services > Documents > Choices.
             $choices = [
-                ['id' => 'g_size', 'name' => 'Paper size', 'required' => true, 'options' => [['id' => 'sz_a4', 'name' => 'A4', 'price' => 0], ['id' => 'sz_short', 'name' => 'Short', 'price' => 0], ['id' => 'sz_long', 'name' => 'Long', 'price' => 0]]],
-                ['id' => 'g_color', 'name' => 'Print color', 'required' => true, 'options' => [['id' => 'cl_bw', 'name' => 'Black & white', 'price' => 0], ['id' => 'cl_col', 'name' => 'Colored', 'price' => 0]]],
+                $grp('g_size', 'Paper size', 'size', [$opt('sz_a4', 'A4', 210, 297), $opt('sz_short', 'Short', 215.9, 279.4), $opt('sz_long', 'Long', 215.9, 330.2)]),
+                $grp('g_color', 'Print color', 'color', [$opt('cl_bw', 'Black & white', 0, 0, true), $opt('cl_col', 'Colored')]),
             ];
             $matrix = ['groups' => ['g_size', 'g_color'], 'prices' => ['sz_a4|cl_bw' => 2, 'sz_a4|cl_col' => 3, 'sz_short|cl_bw' => 2, 'sz_short|cl_col' => 3, 'sz_long|cl_bw' => 3, 'sz_long|cl_col' => 4]];
             $pdo->prepare("UPDATE services SET choices=?, price_matrix=?, unit_label='page' WHERE name='Documents' AND (choices IS NULL OR choices='[]')")->execute([json_encode($choices), json_encode($matrix)]);
@@ -210,7 +229,61 @@ if ($good) {
             $pdo->exec("UPDATE services SET product_type='sticker' WHERE name='Stickers'");
             $pdo->exec("UPDATE services SET product_type='photo' WHERE name IN ('Photo Print','ID Photo','Instax Photo Cards','Photo Strips')");
         }
+        if ($addedKind) {   // what customers upload, how the AI helps, and the photo frame, for the starter services. Edit anytime in Admin > Services > Settings.
+            $pdo->exec("UPDATE services SET upload_kind='document', ai_enabled=0, needs_info=0 WHERE name='Documents'");
+            $pdo->exec("UPDATE services SET upload_kind='photos', ai_enabled=1, ai_mode='edit', needs_info=0 WHERE name='ID Photo'");
+            $pdo->exec("UPDATE services SET upload_kind='photos', ai_enabled=0, needs_info=0, frame_style='instax' WHERE name='Instax Photo Cards'");
+            $pdo->exec("UPDATE services SET upload_kind='photos', ai_enabled=0, needs_info=0 WHERE name='Photo Print'");
+            $pdo->exec("UPDATE services SET upload_kind='photos', ai_enabled=0, frame_style='strip', text_position='center' WHERE name='Photo Strips'");
+            $pdo->exec("UPDATE services SET ai_enabled=1, ai_mode='edit' WHERE name IN ('Stickers','Ref Magnets','Keychains')");
+            $pdo->exec("UPDATE services SET double_sided=1 WHERE name='Keychains'");
+
+            // Documents that were seeded earlier get their real paper sizes + the black & white flag
+            $row = $pdo->query("SELECT id, choices FROM services WHERE name='Documents'")->fetch();
+            if ($row) {
+                $ch = json_decode((string)$row['choices'], true);
+                if (is_array($ch) && $ch && !isset($ch[0]['role'])) {
+                    $dims = ['sz_a4' => [210, 297], 'sz_short' => [215.9, 279.4], 'sz_long' => [215.9, 330.2]];
+                    foreach ($ch as &$g) {
+                        if (($g['id'] ?? '') === 'g_size') { $g['role'] = 'size'; $g['unit'] = 'mm'; foreach ($g['options'] as &$o) if (isset($dims[$o['id'] ?? ''])) { $o['w'] = $dims[$o['id']][0]; $o['h'] = $dims[$o['id']][1]; } unset($o); }
+                        if (($g['id'] ?? '') === 'g_color') { $g['role'] = 'color'; foreach ($g['options'] as &$o) if (($o['id'] ?? '') === 'cl_bw') $o['mono'] = true; unset($o); }
+                    }
+                    unset($g);
+                    $pdo->prepare('UPDATE services SET choices=? WHERE id=?')->execute([json_encode($ch), $row['id']]);
+                }
+            }
+            // ID photo / Instax / Photo print / Photo strips: sizes + packages. YOU set the prices (Admin > Services > Choices > Price table).
+            $pkg = function ($n) use ($opt) { $o = []; for ($i = 1; $i <= $n; $i++) $o[] = $opt('pkg' . $i, 'Package ' . $i); return $o; };
+            $starter = [
+                'ID Photo' => [[$grp('g_size', 'Size', 'size', [$opt('id_1x1', '1x1', 25.4, 25.4), $opt('id_2x2', '2x2', 50.8, 50.8), $opt('id_pp', 'Passport', 35, 45)]), $grp('g_pkg', 'Package', '', $pkg(6))], ['g_size', 'g_pkg'], 'package'],
+                'Instax Photo Cards' => [[$grp('g_size', 'Size', 'size', [$opt('ix_sq', 'Square', 72, 86), $opt('ix_mini', 'Mini', 54, 86), $opt('ix_wide', 'Wide', 108, 86)]), $grp('g_pkg', 'Package', '', $pkg(3))], ['g_size', 'g_pkg'], 'package'],
+                'Photo Print' => [[$grp('g_size', 'Size', 'size', [$opt('r2', '2R', 63.5, 88.9), $opt('r4', '4R', 101.6, 152.4), $opt('r5', '5R', 127, 177.8), $opt('r8', '8R', 203.2, 254), $opt('a4', 'A4', 210, 297)])], ['g_size'], 'print'],
+                'Photo Strips' => [[$grp('g_color', 'Print color', 'color', [$opt('cl_col', 'Colored'), $opt('cl_bw', 'Black & white', 0, 0, true)])], [], 'strip'],
+            ];
+            $up = $pdo->prepare("UPDATE services SET choices=?, price_matrix=?, unit_label=? WHERE name=? AND (choices IS NULL OR choices='[]')");
+            foreach ($starter as $name => $x) $up->execute([json_encode($x[0]), json_encode(['groups' => $x[1], 'prices' => new stdClass()]), $x[2], $name]);
+        }
         step('Services updated (preview, 3D shapes, info fields)', true);
+
+        // Every service has "Details on your design": turn the details on for all services and give a Caption to the ones without any (once)
+        if (add_col($pdo, 'services', 'details_all', 'TINYINT(1) NOT NULL DEFAULT 0')) {
+            foreach ($pdo->query('SELECT id, name, info_fields FROM services')->fetchAll() as $sv) {
+                $ff = json_decode((string)$sv['info_fields'], true);
+                if (!is_array($ff) || !$ff) $ff = [['key' => 'caption', 'label' => $sv['name'] === 'Documents' ? 'Caption / label' : 'Caption', 'type' => 'text', 'required' => false, 'place' => 'front']];
+                $pdo->prepare('UPDATE services SET needs_info=1, info_fields=? WHERE id=?')->execute([json_encode($ff), $sv['id']]);
+            }
+        }
+
+        // Invitation cards: the venue + message are printed INSIDE the folded card, the rest on the front (change it in Admin > Services > Info Fields)
+        $inv = $pdo->query("SELECT id, info_fields FROM services WHERE name='Invitation Cards'")->fetch();
+        if ($inv) {
+            $ff = json_decode((string)$inv['info_fields'], true);
+            if (is_array($ff) && $ff && !array_key_exists('place', $ff[0])) {
+                foreach ($ff as &$fld) $fld['place'] = in_array($fld['key'] ?? '', ['venue_address', 'message_description'], true) ? 'inside' : 'front';
+                unset($fld);
+                $pdo->prepare('UPDATE services SET info_fields=? WHERE id=?')->execute([json_encode($ff), $inv['id']]);
+            }
+        }
 
         $has = $pdo->query("SELECT COUNT(*) FROM users WHERE role='admin'")->fetchColumn();
         if (!$has) {
@@ -230,7 +303,7 @@ if ($good) {
         }
         step('PayMongo key set (GCash / PayMaya)', PAYMONGO_SECRET !== '', PAYMONGO_SECRET === '' ? 'add PAYMONGO_SECRET in api/config.local.php' : '');
         step('Background remover (rembg / Python)', rembg_ready(), rembg_ready() ? 'found. Run ?testrembg=1 then ?warmrembg=1 once' : 'not found at ' . REMBG_PYTHON . ' (the built-in remover is used instead)');
-        step('AI key set (optional)', ANTHROPIC_API_KEY !== '', ANTHROPIC_API_KEY === '' ? 'not set: the built-in designer is used' : '');
+        step('AI key set (optional)', ANTHROPIC_API_KEY !== '' || OPENAI_API_KEY !== '', (ANTHROPIC_API_KEY !== '' || OPENAI_API_KEY !== '') ? 'found. Run ?testai=1 to check it works' : 'not set: the built-in designer is used');
     } catch (Throwable $e) {
         step('MySQL', false, $e->getMessage() . '  → Is MySQL started in XAMPP? Check DB_USER / DB_PASS in api/config.local.php.');
     }
@@ -238,6 +311,7 @@ if ($good) {
 ?><!DOCTYPE html><meta charset="utf-8"><title>HappyQueens setup</title>
 <body style="font:16px/1.7 system-ui;max-width:680px;margin:40px auto">
 <h2>HappyQueens setup</h2><ul style="list-style:none;padding:0"><?= implode('', $rows) ?></ul>
+<p>AI design prompt: <a href="?testai=1" target="_blank">test the AI key</a></p>
 <p>Background remover: <a href="?testrembg=1" target="_blank">test rembg</a> &middot; <a href="?warmrembg=1" target="_blank">download the model (first time)</a></p>
 <p>Test real email: add <code>?testmail=youremail@gmail.com</code> to this page's URL.<br>Test-mode codes (APP_DEBUG on): <a href="?otp=1" target="_blank">view codes</a></p>
 <p><b>Delete this file</b> when you're done.</p></body>

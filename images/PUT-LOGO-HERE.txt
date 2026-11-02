@@ -1,0 +1,4 @@
+Save your logo in this folder as:  logo.png
+
+Every navigation bar (website and admin) shows images/logo.png first.
+Until that file exists it falls back to the Facebook link, which stops working after a while.

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome! — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <nav class="navbar container">
+
+      <div class="logo">
+        <div class="logo-mark">
+          <img src="../../images/logo.png" onerror="this.onerror=null;this.src='https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx1500x1500&amp;ctp=s1500x1500&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=6ee11a&amp;_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&amp;_nc_ohc=eDMA4MEgCgkQ7kNvwGh_7JC&amp;_nc_oc=AdpAmp4jTx-JaznqJ4r-mOJFdoVoMadQ7NJC81W9Ak6R4iVkWcgGqX4l-0Cdt2sS8dI&amp;_nc_zt=23&amp;_nc_ht=scontent.fmnl17-5.fna&amp;_nc_gid=j7RmVAP06tKlhbe9JuESwQ&amp;_nc_ss=7b2a8&amp;oh=00_AQTAywSyjO-G8GTkUCSBQCsPTqh-SfSwTpf-V_TORSkHqg&amp;oe=6AEE1F7F'" alt="Happy Queen's logo">
+        </div>
+        <div>
+          <div class="logo-name">Happy Queen's</div>
+          <div class="logo-tagline">CRAFTY HOUSE</div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about-us.html">About Us</a></li>
+        <li><a href="our-services.html">Our Services</a></li>
+        <li><a href="contact-us.html">Contact Us</a></li>
+        <li><a href="track-order.html">Track Order</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline">Log In</a>
+        <a href="register.html" class="btn btn-filled">Register</a>
+      </div>
+
+    </nav>
+  </header>
+
+  <!-- Success -->
+  <section class="auth-section">
+    <div class="auth-card auth-card-center">
+      <div class="auth-success-icon">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <span class="auth-eyebrow">You're All Set</span>
+      <h1 id="welcomeHeading">Registration Complete!</h1>
+      <p class="auth-sub" id="welcomeSub">Your account has been created and you're now logged in. You can start placing custom orders with Happy Queen's Crafty House.</p>
+
+      <button type="button" class="btn-auth-primary" onclick="location.href='../with-account/homepage.html'">Go to Homepage</button>
+    </div>
+  </section>
+
+  
+
+<script src="../js/api.js"></script>
+  <script>
+    hqApi('me').then(function (r) {
+      if (r.ok && r.user && r.user.firstName) {
+        document.getElementById('welcomeHeading').textContent = 'Welcome, ' + r.user.firstName + '!';
+      }
+    });
+  </script>
+
+</body>
+</html>
