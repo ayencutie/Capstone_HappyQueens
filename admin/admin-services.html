@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="client-side/js/api.js"></script>
-  <script src="client-side/js/admin-common.js"></script>
+  <script src="../client-side/js/api.js"></script>
+  <script src="../client-side/js/admin-common.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Services — Admin — Happy Queen's Crafty House</title>
@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="client-side/css/styles.css">
-  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="../client-side/css/styles.css">
+  <link rel="stylesheet" href="../client-side/css/account-menu.css">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
@@ -24,7 +24,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar-brand">
         <div class="logo-mark">
-          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+          <img src="../images/logo.png" onerror="this.onerror=null;this.src='https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx1500x1500&amp;ctp=s1500x1500&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=6ee11a&amp;_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&amp;_nc_ohc=eDMA4MEgCgkQ7kNvwGh_7JC&amp;_nc_oc=AdpAmp4jTx-JaznqJ4r-mOJFdoVoMadQ7NJC81W9Ak6R4iVkWcgGqX4l-0Cdt2sS8dI&amp;_nc_zt=23&amp;_nc_ht=scontent.fmnl17-5.fna&amp;_nc_gid=j7RmVAP06tKlhbe9JuESwQ&amp;_nc_ss=7b2a8&amp;oh=00_AQTAywSyjO-G8GTkUCSBQCsPTqh-SfSwTpf-V_TORSkHqg&amp;oe=6AEE1F7F'" alt="Happy Queen's logo">
         </div>
         <div class="admin-sidebar-brand-text">
           <strong>Happy Queen's</strong>
@@ -44,7 +44,7 @@
         <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
 
         <div class="admin-nav-label">Store</div>
-        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+        <a href="../client-side/without-account/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -170,7 +170,7 @@
           <div class="admin-detail-panel-header">
             <div>
               <h3>Info Fields</h3>
-              <p>What the customer must type before ordering (names, address, date...). It is shown on the design preview. Leave empty if this product needs no text. The first field is the biggest line on the design.</p>
+              <p>What the customer must type before ordering (names, address, date...). It is shown on the design preview. Leave empty if this product needs no text. The first field is the biggest line on the design. For each text choose where it is printed: the front, the inside of a folded card, or the back. Customers can choose the font and size of every text.</p>
             </div>
             <button type="button" class="btn btn-filled" id="addInfoFieldBtn"><i class="fa-solid fa-plus"></i> Add Field</button>
           </div>
@@ -221,6 +221,33 @@
                   <option value="magnet">Fridge magnet (thick, dark magnetic back)</option>
                   <option value="keychain">Keychain (acrylic with ring and chain)</option>
                 </select>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsUploadKind">What the customer uploads</label>
+                <select id="detailSettingsUploadKind">
+                  <option value="design">One picture / design (stickers, magnets, keychains, cards)</option>
+                  <option value="photos">Several photos (ID photo, Instax, photo print, photo strip)</option>
+                  <option value="document">A document to print (PDF / Word)</option>
+                </select>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsAiMode">What the AI prompt does</label>
+                <select id="detailSettingsAiMode">
+                  <option value="design">Makes a design (invitation, business card...)</option>
+                  <option value="edit">Edits the customer's own picture (stickers, magnets, keychains, ID photo)</option>
+                </select>
+                <p class="admin-modal-hint">The AI prompt itself is switched on with "Customers can type an AI design prompt" below. Editing a picture needs an OpenAI key.</p>
+              </div>
+              <div class="admin-modal-field">
+                <label for="detailSettingsFrame">Photo frame in the preview</label>
+                <select id="detailSettingsFrame">
+                  <option value="">None</option>
+                  <option value="instax">Instax (white frame, thicker at the bottom)</option>
+                  <option value="strip">Photo strip (4 photos, white border)</option>
+                </select>
+              </div>
+              <div class="admin-modal-field admin-modal-field-checkbox">
+                <label class="admin-checkbox-label"><input type="checkbox" id="detailSettingsDoubleSided"> <span>Back to back: print the picture on both sides (for keychains)</span></label>
               </div>
               <div class="admin-modal-field" id="detailSettingsShapesWrap">
                 <label>3D shapes the customer can switch between</label>
@@ -394,7 +421,7 @@
 
     </div>
   </div>
-  <script src="client-side/js/admin-services.js"></script>
+  <script src="../client-side/js/admin-services.js"></script>
 
   
 

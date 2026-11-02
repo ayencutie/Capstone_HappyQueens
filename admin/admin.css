@@ -688,7 +688,6 @@
 }
 
 .admin-service-card:hover {
-  transform: translateY(-3px);
   box-shadow: 0 14px 28px rgba(22, 59, 74, 0.12);
 }
 

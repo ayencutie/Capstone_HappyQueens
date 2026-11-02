@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="client-side/js/api.js"></script>
-  <script src="client-side/js/admin-common.js"></script>
+  <script src="../client-side/js/api.js"></script>
+  <script src="../client-side/js/admin-common.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inquiries — Admin — Happy Queen's Crafty House</title>
@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="client-side/css/styles.css">
-  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="../client-side/css/styles.css">
+  <link rel="stylesheet" href="../client-side/css/account-menu.css">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
@@ -24,7 +24,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar-brand">
         <div class="logo-mark">
-          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+          <img src="../images/logo.png" onerror="this.onerror=null;this.src='https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx1500x1500&amp;ctp=s1500x1500&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=6ee11a&amp;_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&amp;_nc_ohc=eDMA4MEgCgkQ7kNvwGh_7JC&amp;_nc_oc=AdpAmp4jTx-JaznqJ4r-mOJFdoVoMadQ7NJC81W9Ak6R4iVkWcgGqX4l-0Cdt2sS8dI&amp;_nc_zt=23&amp;_nc_ht=scontent.fmnl17-5.fna&amp;_nc_gid=j7RmVAP06tKlhbe9JuESwQ&amp;_nc_ss=7b2a8&amp;oh=00_AQTAywSyjO-G8GTkUCSBQCsPTqh-SfSwTpf-V_TORSkHqg&amp;oe=6AEE1F7F'" alt="Happy Queen's logo">
         </div>
         <div class="admin-sidebar-brand-text">
           <strong>Happy Queen's</strong>
@@ -44,7 +44,7 @@
         <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
 
         <div class="admin-nav-label">Store</div>
-        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+        <a href="../client-side/without-account/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -128,7 +128,7 @@
         body.innerHTML = rows.map(function (i) {
           var files = (i.files || []).map(function (f) { return '<a href="' + hqEsc(hqAsset(f.path)) + '" target="_blank" rel="noopener">' + hqEsc(f.name) + '</a>'; }).join('<br>') || '&ndash;';
           return '<tr><td>' + hqDate(i.date) + '</td>' +
-            '<td class="admin-cell-strong">' + hqEsc(i.name) + '<span class="admin-cell-sub">' + hqEsc(i.contact) + '</span></td>' +
+            '<td class="admin-cell-strong">' + hqEsc(i.name) + '<span class="admin-cell-sub">' + hqEsc(i.contact) + (i.email ? ' &middot; ' + hqEsc(i.email) : '') + (i.guest ? ' &middot; visitor' : '') + '</span></td>' +
             '<td>' + hqEsc(i.service) + '<span class="admin-cell-sub">Qty: ' + i.qty + '</span></td>' +
             '<td style="white-space:pre-line;max-width:320px;">' + hqEsc(i.details || '') + '</td><td>' + files + '</td>' +
             '<td><select data-id="' + i.id + '">' + ['new', 'replied', 'closed'].map(function (s) { return '<option value="' + s + '"' + (s === i.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') + '</select></td></tr>';

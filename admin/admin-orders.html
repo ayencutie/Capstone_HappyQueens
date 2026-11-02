@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="client-side/js/api.js"></script>
-  <script src="client-side/js/admin-common.js"></script>
+  <script src="../client-side/js/api.js"></script>
+  <script src="../client-side/js/admin-common.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orders — Admin — Happy Queen's Crafty House</title>
@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="client-side/css/styles.css">
-  <link rel="stylesheet" href="client-side/css/account-menu.css">
+  <link rel="stylesheet" href="../client-side/css/styles.css">
+  <link rel="stylesheet" href="../client-side/css/account-menu.css">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
@@ -24,7 +24,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar-brand">
         <div class="logo-mark">
-          <img src="https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&_nc_ohc=rd-Cc6x5caIQ7kNvwHENFi4&_nc_oc=Adquv0xwdOBhRmNsQCgZS4j9dC4R4x7-wAPWlbKNBwSaaKRSbdg6z5Chvud_Lh_WC3c&_nc_zt=23&_nc_ht=scontent.fmnl17-5.fna&_nc_gid=O9CuI3Bt0bLQmEqPBhsrxQ&_nc_ss=7b2a8&oh=00_AQFsH8U19C3oRXII54C1v6Ti06eoyspgYK8luRkEOp7YMA&oe=6A726ABF" alt="Happy Queen's logo">
+          <img src="../images/logo.png" onerror="this.onerror=null;this.src='https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx1500x1500&amp;ctp=s1500x1500&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=6ee11a&amp;_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&amp;_nc_ohc=eDMA4MEgCgkQ7kNvwGh_7JC&amp;_nc_oc=AdpAmp4jTx-JaznqJ4r-mOJFdoVoMadQ7NJC81W9Ak6R4iVkWcgGqX4l-0Cdt2sS8dI&amp;_nc_zt=23&amp;_nc_ht=scontent.fmnl17-5.fna&amp;_nc_gid=j7RmVAP06tKlhbe9JuESwQ&amp;_nc_ss=7b2a8&amp;oh=00_AQTAywSyjO-G8GTkUCSBQCsPTqh-SfSwTpf-V_TORSkHqg&amp;oe=6AEE1F7F'" alt="Happy Queen's logo">
         </div>
         <div class="admin-sidebar-brand-text">
           <strong>Happy Queen's</strong>
@@ -44,7 +44,7 @@
         <a href="template-page.html" class="admin-nav-link"><i class="fa-solid fa-images"></i> Templates</a>
 
         <div class="admin-nav-label">Store</div>
-        <a href="client-side/html/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+        <a href="../client-side/without-account/index.html" class="admin-nav-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -164,20 +164,18 @@
         '<div class="admin-modal-row"><span>Receiver</span><span>' + hqEsc(dv.name || '') + '<br>' + hqEsc((o.details && o.details.contactPhone) || dv.phone || '') + '</span></div>' +
         '<div class="admin-modal-row"><span>Address</span><span style="white-space:pre-line;text-align:right;">' + hqEsc(dv.address || '') + '</span></div>' +
         '<div class="admin-modal-row"><span>Landmark</span><span>' + hqEsc(dv.landmark || '') + '</span></div>';
-      if (o.deliveryStatus === 'paid') return out + '<div class="admin-modal-row"><span>Delivery fee</span><span>' + hqPeso(o.deliveryFee) + ' &mdash; paid</span></div>' + (o.lalamoveRef ? '<div class="admin-modal-row"><span>Lalamove ref</span><span>' + hqEsc(o.lalamoveRef) + '</span></div>' : '');
-      if (o.status === 'cancelled') return out;
-      out += '<div class="admin-modal-field"><label for="delFeeInput">Lalamove delivery fee (&#8369;) &mdash; ' + (o.deliveryFee > 0 ? 'requested: ' + hqPeso(o.deliveryFee) + ', not paid yet' : 'not requested yet') + '</label>' +
-        '<input type="number" id="delFeeInput" min="20" step="0.01" value="' + (o.deliveryFee > 0 ? o.deliveryFee : '') + '" placeholder="Rate from the Lalamove app">' +
+      if (o.status === 'cancelled') return out + (o.deliveryFee > 0 ? '<div class="admin-modal-row"><span>Delivery fee</span><span>' + hqPeso(o.deliveryFee) + '</span></div>' : '');
+      out += '<div class="admin-modal-field"><label for="delFeeInput">Lalamove delivery fee (&#8369;) &mdash; ' + (o.deliveryFee > 0 ? 'set: ' + hqPeso(o.deliveryFee) + (o.deliveryStatus === 'paid' ? ' (paid online)' : ' (the customer pays the rider, COD)') : 'not set yet') + '</label>' +
+        '<input type="number" id="delFeeInput" min="1" step="0.01" value="' + (o.deliveryFee > 0 ? o.deliveryFee : '') + '" placeholder="Rate from the Lalamove app">' +
         '<input type="text" id="delRefInput" value="' + hqEsc(o.lalamoveRef || '') + '" placeholder="Lalamove booking / tracking link (optional)" style="margin-top:8px;">' +
-        '<p class="admin-modal-hint">The customer sees this fee, and can pay it, only when the order is <b>Packing</b> or <b>Out for Delivery</b>. The order can go out for delivery after it is paid.</p>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button type="button" class="btn btn-outline" id="delFeeBtn">' + (o.deliveryFee > 0 ? 'Update delivery fee' : 'Request delivery payment') + '</button>' +
-        (o.deliveryFee > 0 ? '<button type="button" class="btn btn-outline" id="delPaidBtn">Mark delivery fee as paid</button>' : '') + '</div></div>';
+        '<p class="admin-modal-hint">The customer pays this fee to the <b>Lalamove rider</b> when the order arrives (cash on delivery), so nothing is collected online. They can see it once the order is <b>Packing</b>. Enter it before sending the order out for delivery.</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button type="button" class="btn btn-outline" id="delFeeBtn">' + (o.deliveryFee > 0 ? 'Update delivery fee' : 'Save delivery fee') + '</button></div></div>';
       return out;
     }
     function paySub(o) {
       if (o.status === 'cancelled' && o.amountPaid > 0) return { refunded: 'Refunded', processing: 'Refund processing', manual: 'REFUND NEEDED', none: 'Refund not started' }[o.refundStatus] || '';
       var base = { paid: 'Paid in full', partial: 'Down payment paid', unpaid: 'Not paid yet' }[o.payStatus] || '';
-      if (o.fulfillment === 'delivery' && o.status !== 'cancelled') base += ' \u00B7 Delivery: ' + (o.deliveryStatus === 'paid' ? 'fee paid' : o.deliveryFee > 0 ? 'fee unpaid' : 'no fee yet');
+      if (o.fulfillment === 'delivery' && o.status !== 'cancelled') base += ' \u00B7 Delivery: ' + (o.deliveryStatus === 'paid' ? 'fee paid' : o.deliveryFee > 0 ? 'fee ' + hqPeso(o.deliveryFee) + ' (COD)' : 'no fee yet');
       return base;
     }
     function refundHtml(o) {
@@ -194,12 +192,31 @@
       if (d.orientation) out += '<div class="admin-modal-row"><span>Orientation</span><span>' + (d.orientation === 'landscape' ? 'Landscape' : 'Portrait') + '</span></div>';
       if (d.cutShape) out += '<div class="admin-modal-row"><span>Cut shape</span><span>' + ({ circle: 'Circle', triangle: 'Triangle', square: 'Square', heart: 'Heart', photo: 'Follow the photo (background removed)' }[d.cutShape] || d.cutShape) + '</span></div>';
       if (d.shape && (d.shape === 'two-fold')) out += '<div class="admin-modal-row"><span>Card type</span><span>' + shapes[d.shape] + '</span></div>';
-      (d.info || []).forEach(function (r) { out += '<div class="admin-modal-row"><span>' + hqEsc(r.label) + '</span><span style="white-space:pre-line;text-align:right;">' + hqEsc(r.value) + '</span></div>'; });
+      (d.info || []).forEach(function (r) {
+        var note = (r.font ? 'Font: ' + r.font : '') + (r.scale && Math.abs(r.scale - 1) > 0.01 ? (r.font ? ' \u00B7 ' : '') + 'size ' + Math.round(r.scale * 100) + '%' : '');
+        out += '<div class="admin-modal-row"><span>' + hqEsc(r.label) + (r.side && r.side !== 'front' ? ' <small>(' + hqEsc(r.side) + ')</small>' : '') + '</span><span style="white-space:pre-line;text-align:right;">' + hqEsc(r.value) + (note ? '<br><small style="color:#87a9a9;">' + hqEsc(note) + '</small>' : '') + '</span></div>';
+      });
       var des = d.design || {};
-      var src = { template: 'Template', upload: 'Customer upload', ai: 'AI prompt: "' + hqEsc(des.prompt || '') + '"', none: 'None' }[des.source || 'none'];
+      var src = { template: 'Template', upload: 'Customer upload', photos: 'Customer photos', document: 'Customer document', ai: 'AI prompt: "' + hqEsc(des.prompt || '') + '"', none: 'None' }[des.source || 'none'];
       out += '<div class="admin-modal-row"><span>Design</span><span>' + src + '</span></div>';
       if (order.designImage) out += '<div class="admin-modal-field"><label>Design preview</label><a href="' + hqEsc(hqAsset(order.designImage)) + '" target="_blank" rel="noopener"><img src="' + hqEsc(hqAsset(order.designImage)) + '" alt="Design" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid #dcecec;"></a></div>';
-      if (des.file && des.source === 'upload') out += '<div class="admin-modal-row"><span>Uploaded file</span><span><a href="' + hqEsc(hqAsset(des.file)) + '" target="_blank" rel="noopener">Open original</a></span></div>';
+      if (order.designBackImage) out += '<div class="admin-modal-field"><label>Design back</label><a href="' + hqEsc(hqAsset(order.designBackImage)) + '" target="_blank" rel="noopener"><img src="' + hqEsc(hqAsset(order.designBackImage)) + '" alt="Design back" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid #dcecec;"></a></div>';
+      if (order.designInsideImage) out += '<div class="admin-modal-field"><label>Design inside</label><a href="' + hqEsc(hqAsset(order.designInsideImage)) + '" target="_blank" rel="noopener"><img src="' + hqEsc(hqAsset(order.designInsideImage)) + '" alt="Design inside" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid #dcecec;"></a></div>';
+      if (des.source === 'upload' && des.file) out += '<div class="admin-modal-row"><span>Uploaded file</span><span><a href="' + hqEsc(hqAsset(des.file)) + '" target="_blank" rel="noopener">Open picture</a></span></div>';
+      if (des.source === 'upload' && des.original) out += '<div class="admin-modal-row"><span>Original (before AI)</span><span><a href="' + hqEsc(hqAsset(des.original)) + '" target="_blank" rel="noopener">Open original</a></span></div>';
+      if (des.aiPrompt) out += '<div class="admin-modal-row"><span>AI edit prompt</span><span style="text-align:right;">' + hqEsc(des.aiPrompt) + '</span></div>';
+      if (des.sides && des.sides.back) out += '<div class="admin-modal-row"><span>Customer\'s own BACK design</span><span><a href="' + hqEsc(hqAsset(des.sides.back)) + '" target="_blank" rel="noopener">Open</a></span></div>';
+      if (des.sides && des.sides.inside) out += '<div class="admin-modal-row"><span>Customer\'s own INSIDE design</span><span><a href="' + hqEsc(hqAsset(des.sides.inside)) + '" target="_blank" rel="noopener">Open</a></span></div>';
+      if (des.source === 'photos') {
+        out += '<div class="admin-modal-row"><span>Copies of each photo</span><span>' + (des.copies || 1) + '</span></div>' +
+          '<div class="admin-modal-field"><label>Photos (' + (des.photos || []).length + ')</label><div style="display:flex;gap:8px;flex-wrap:wrap;">' + (des.photos || []).map(function (p) {
+            return '<a href="' + hqEsc(hqAsset(p.file)) + '" target="_blank" rel="noopener" title="' + hqEsc((p.aiPrompt ? 'AI edit: ' + p.aiPrompt : p.name) || '') + '"><img src="' + hqEsc(hqAsset(p.file)) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #dcecec;"></a>';
+          }).join('') + '</div></div>';
+      }
+      if (des.source === 'document') {
+        out += '<div class="admin-modal-row"><span>Document</span><span><a href="' + hqEsc(hqAsset(des.file)) + '" target="_blank" rel="noopener">' + hqEsc(des.name || 'Download') + '</a></span></div>' +
+          '<div class="admin-modal-row"><span>Pages &times; copies</span><span>' + (des.pages || 1) + ' &times; ' + (des.copies || 1) + '</span></div>';
+      }
       return out;
     }
 
@@ -287,7 +304,7 @@
           deliveryHtml(order) +
           infoHtml(order) +
           statusField +
-          '<div class="admin-modal-actions"><button type="button" class="btn btn-outline" id="orderModalCancel">Close</button></div>';
+          '<div class="admin-modal-actions"><a class="btn btn-filled" href="order-view.html?id=' + order.dbId + '" target="_blank" rel="noopener"><i class="fa-solid fa-expand"></i> View product / Print</a><button type="button" class="btn btn-outline" id="orderModalCancel">Close</button></div>';
 
         modal.classList.add('is-open');
         var sel = document.getElementById('orderStatusSelect');
@@ -297,25 +314,19 @@
           if (!r.ok) { alert(r.error || 'Could not update the status.'); this.value = previous; return; }
           order.status = this.value;
           renderOrders();
-          if (r.needsDeliveryFee) { alert('This order is for delivery. Enter the Lalamove delivery fee below so the customer can pay it.'); openOrderModal(order.dbId); }
+          if (r.needsDeliveryFee) { alert('This order is for delivery. Enter the Lalamove delivery fee below. The customer pays it to the rider (COD).'); openOrderModal(order.dbId); }
         });
         document.getElementById('orderModalCancel').addEventListener('click', closeOrderModal);
-        var df = document.getElementById('delFeeBtn'), dp = document.getElementById('delPaidBtn');
+        var df = document.getElementById('delFeeBtn');
         if (df) df.addEventListener('click', async function () {
           var fee = parseFloat(document.getElementById('delFeeInput').value);
-          if (!fee || fee < 20) { alert('Enter the Lalamove fee (at least 20 pesos).'); return; }
+          if (!fee || fee < 1) { alert('Enter the Lalamove delivery fee (the amount the customer pays the rider).'); return; }
           df.disabled = true;
           var r = await hqAdmin('order_delivery_fee', { id: order.dbId, fee: fee, ref: document.getElementById('delRefInput').value });
           if (!r.ok) { alert(r.error || 'Could not save.'); df.disabled = false; return; }
-          order.deliveryFee = fee; order.deliveryStatus = 'unpaid'; order.lalamoveRef = document.getElementById('delRefInput').value || null;
+          order.deliveryFee = fee; order.deliveryStatus = 'cod'; order.lalamoveRef = document.getElementById('delRefInput').value || null;
           renderOrders(); openOrderModal(order.dbId);
-          alert(order.status === 'packing' || order.status === 'out-for-delivery' ? 'Saved. The customer can now pay the delivery fee.' : 'Saved. The customer will be asked to pay it once the order is Packing.');
-        });
-        if (dp) dp.addEventListener('click', async function () {
-          if (!confirm('Mark the delivery fee as paid? Only do this if you really received it.')) return;
-          var r = await hqAdmin('order_delivery_paid', { id: order.dbId });
-          if (!r.ok) return alert(r.error || 'Could not update.');
-          order.deliveryStatus = 'paid'; renderOrders(); openOrderModal(order.dbId);
+          alert('Saved. The customer will see the delivery fee (they pay it to the rider on delivery).');
         });
         var rr = document.getElementById('retryRefundBtn'), rd = document.getElementById('doneRefundBtn');
         if (rr) rr.addEventListener('click', async function () {

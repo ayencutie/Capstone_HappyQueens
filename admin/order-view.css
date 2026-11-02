@@ -1,0 +1,49 @@
+/* Admin > view a customer's product (full screen, 3D) and print it */
+* { box-sizing: border-box; }
+body.ov-body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: 'Poppins', sans-serif; color: #e9f2f4; background: #16252b; }
+.ov-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 18px; background: #0f1d22; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.ov-back { color: #9ed2db; text-decoration: none; font-size: 14px; font-weight: 600; }
+.ov-title { display: flex; flex-direction: column; line-height: 1.25; }
+.ov-title strong { font-size: 16px; }
+.ov-title span { font-size: 12.5px; color: #8fb0b8; }
+.ov-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.ov-seg { display: inline-flex; padding: 3px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
+.ov-seg button { padding: 6px 14px; font: inherit; font-size: 12.5px; font-weight: 600; color: #b9d3d9; background: none; border: none; border-radius: 999px; cursor: pointer; }
+.ov-seg button.is-active { color: #0f1d22; background: #9ed2db; }
+.ov-btn, .ov-select { padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600; color: #e9f2f4; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 10px; cursor: pointer; }
+.ov-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.ov-btn.is-primary { color: #0f1d22; background: #9ed2db; border-color: #9ed2db; }
+.ov-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ov-select option { color: #111; }
+.ov-color { width: 36px; height: 34px; padding: 0; background: none; border: none; cursor: pointer; }
+.ov-main { position: relative; flex: 1; min-height: 0; }
+.ov-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #2b3a42; }
+.ov-stage canvas.ov-flat, .ov-stage img.ov-flat { max-width: 92%; max-height: 92%; border-radius: 4px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); }
+.ov-stage.is-gallery { align-items: flex-start; justify-content: flex-start; overflow: auto; padding: 24px; flex-wrap: wrap; gap: 18px; background: #2b3a42; }
+.ov-photo { width: 220px; text-align: center; font-size: 12px; color: #b9d3d9; }
+.ov-photo img { display: block; width: 100%; height: 220px; object-fit: contain; margin-bottom: 6px; border-radius: 8px; background: #fff; }
+.ov-msg { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 15px; color: #b9d3d9; pointer-events: none; }
+.ov-msg a { color: #9ed2db; pointer-events: auto; }
+.ov-msg:empty { display: none; }
+.ov-foot { display: flex; gap: 22px; flex-wrap: wrap; padding: 9px 18px; font-size: 12.5px; color: #8fb0b8; background: #0f1d22; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.ov-foot b { color: #e9f2f4; }
+
+/* the print layout: the unfolded sheet(s) */
+.ov-sheet { position: absolute; inset: 0; z-index: 5; display: flex; gap: 28px; align-items: flex-start; justify-content: center; flex-wrap: wrap; padding: 24px; overflow: auto; background: #2b3a42; }
+.ov-sheet figure { margin: 0; text-align: center; font-size: 12.5px; color: #b9d3d9; }
+.ov-sheet img { display: block; max-width: min(46vw, 640px); max-height: 74vh; margin: 0 auto 8px; background: #fff; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45); }
+.ov-sheet figcaption { max-width: 420px; margin: 0 auto; }
+
+/* printing: only the artwork pages */
+.print-area { display: none; }
+@media print {
+  @page { margin: 0; }
+  html, body { height: auto !important; background: #fff !important; color: #000; }
+  .screen-only { display: none !important; }
+  .print-area { display: block; }
+  .print-page { box-sizing: border-box; padding: 6mm; page-break-after: always; break-after: page; text-align: center; }
+  .print-page:last-child { page-break-after: auto; break-after: auto; }
+  .print-page img { display: block; margin: 0 auto; max-width: 100%; }
+  .print-area.is-portrait .print-page img { max-height: 255mm; }
+  .print-area.is-landscape .print-page img { max-height: 186mm; }
+}
