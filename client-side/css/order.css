@@ -57,7 +57,7 @@
   background: radial-gradient(circle at 50% 35%, #ffffff 0%, var(--color-bg-soft) 100%);
   border-radius: 14px;
 }
-.preview-stage canvas.flat-canvas { max-width: 92%; max-height: 92%; border-radius: 6px; box-shadow: 0 12px 30px rgba(22, 59, 74, 0.22); }
+.preview-stage canvas.flat-canvas { max-width: none; max-height: none; border-radius: 6px; box-shadow: 0 12px 30px rgba(22, 59, 74, 0.22); }
 .preview-hint { margin-top: 10px; font-size: 12.5px; text-align: center; color: var(--color-text-light); }
 
 /* --- form blocks ------------------------------------------------------------------ */
@@ -231,3 +231,43 @@
 .price-table td { padding: 8px 12px; color: var(--color-text-light); border-bottom: 1px solid var(--color-border); }
 .price-table tr.is-selected td { font-weight: 700; color: var(--color-text); background: var(--color-primary-pale); }
 .price-table em { font-style: normal; color: #c0392b; }
+
+/* --- size label, document pages, photo thumbnails ------------------------------------- */
+.size-label { margin-top: 10px; font-size: 13.5px; text-align: center; color: var(--color-text-light); }
+.size-label b { color: var(--color-text); }
+.doc-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--color-text); }
+.photo-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.photo-thumb { position: relative; width: 76px; height: 76px; border: 2px solid transparent; border-radius: 12px; cursor: pointer; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+.photo-thumb.is-active { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99, 163, 177, 0.3); }
+.photo-thumb .photo-x { position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; padding: 0; font-size: 14px; line-height: 20px; color: #fff; background: #b23434; border: none; border-radius: 50%; cursor: pointer; }
+.opt-note { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--color-text-light); }
+
+/* --- full screen preview ---------------------------------------------------------------- */
+.order-preview-card.is-fullscreen { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; max-width: none; padding: 16px 22px 20px; border-radius: 0; overflow: auto; background: var(--color-white); }
+.order-preview-card.is-fullscreen .preview-stage { flex: 1; height: auto; min-height: 320px; border-radius: 10px; }
+body.has-fullscreen { overflow: hidden; }
+
+/* --- text controls (font + size) -------------------------------------------------------- */
+.fld-group { margin: 18px 0 10px; padding-top: 12px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--color-primary); border-top: 1px dashed var(--color-border); }
+.fld-group:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.fld-style { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; color: var(--color-text-light); }
+.fld-style select { padding: 6px 10px; font: inherit; font-size: 12.5px; color: var(--color-text); background: var(--color-white); border: 1.5px solid var(--color-border); border-radius: 10px; }
+.fld-style label { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 600; }
+.fld-style input[type="range"] { width: 110px; accent-color: var(--color-primary); }
+.fld-style .fld-pct { min-width: 38px; font-weight: 700; color: var(--color-text); }
+.side-uploads .upload-row { margin-top: 10px; }
+
+/* --- move / zoom the picture ------------------------------------------------------------ */
+.crop-editor { position: absolute; inset: 0; z-index: 6; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: var(--color-bg-soft); }
+.crop-editor canvas { max-width: 100%; border-radius: 6px; cursor: grab; touch-action: none; box-shadow: 0 8px 24px rgba(22, 59, 74, 0.18); }
+.crop-editor canvas:active { cursor: grabbing; }
+.crop-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.crop-bar input[type="range"] { width: 150px; accent-color: var(--color-primary); }
+.crop-bar .is-primary { color: #fff; background: var(--color-accent); border-color: var(--color-accent); }
+.crop-hint { max-width: 420px; font-size: 12px; text-align: center; color: var(--color-text-light); }
+
+/* reminder to pay the balance (View Order + Track Order) */
+.pay-reminder { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; padding: 14px 16px; font-size: 14px; line-height: 1.55; color: #7a4b00; background: #fff6e5; border: 1px solid #f1d08a; border-radius: 14px; }
+.pay-reminder i { margin-top: 3px; color: #d98a00; }
+.pay-reminder a { color: #7a4b00; }

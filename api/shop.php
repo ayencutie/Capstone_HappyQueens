@@ -25,12 +25,15 @@ function order_full(array $o) {
         'payOption' => $o['pay_option'], 'paymentStatus' => $o['payment_status'], 'method' => $o['payment'], 'status' => $o['status'],
         'canCancel' => $o['status'] === 'pending',
         'fulfillment' => $o['fulfillment'], 'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status'],
-        // the delivery fee only shows up to the customer once the order is packing / out for delivery
-        'deliveryDue' => $o['fulfillment'] === 'delivery' && (float)$o['delivery_fee'] > 0 && $o['delivery_status'] === 'unpaid' && in_array($o['status'], ['packing', 'out-for-delivery'], true),
+        // the balance is paid in View Order once the order is packing; a delivery order does not go out until it is paid. The Lalamove fee is paid to the rider (COD).
+        'balanceDue' => in_array($o['status'], ['packing', 'out-for-delivery'], true) && $o['payment_status'] === 'partial' && round((float)$o['total'] - $paid, 2) > 0.009,
+        'balanceHold' => $o['fulfillment'] === 'delivery' && $o['status'] === 'packing' && $o['payment_status'] === 'partial' && round((float)$o['total'] - $paid, 2) > 0.009,
+        'deliveryCod' => $o['fulfillment'] === 'delivery' && (float)$o['delivery_fee'] > 0 && in_array($o['status'], ['packing', 'out-for-delivery', 'completed'], true),
         'deliveryAddress' => $d['delivery']['address'] ?? '', 'deliveryLandmark' => $d['delivery']['landmark'] ?? '', 'contactPhone' => $d['contactPhone'] ?? '', 'lalamoveRef' => $o['lalamove_ref'],
         'refundStatus' => $o['refund_status'], 'refundAmount' => (float)$o['refund_amount'],
-        'designImage' => $o['design_image'], 'shape' => $d['shape'] ?? 'no-fold', 'info' => $d['info'] ?? [],
+        'designImage' => $o['design_image'], 'designBackImage' => $o['design_back_image'], 'designInsideImage' => $o['design_inside_image'], 'shape' => $d['shape'] ?? 'no-fold', 'info' => $d['info'] ?? [],
         'designSource' => $d['design']['source'] ?? 'none', 'notes' => $d['notes'] ?? '',
+        'documentName' => (($d['design']['source'] ?? '') === 'document') ? ($d['design']['name'] ?? '') : '', 'photoCount' => count($d['design']['photos'] ?? []), 'copies' => (int)($d['design']['copies'] ?? 1),
     ];
 }
 function order_summary(array $o) {
@@ -38,7 +41,8 @@ function order_summary(array $o) {
             'total' => (float)$o['total'], 'due' => (float)$o['amount_due'], 'paid' => (float)$o['amount_paid'],
             'balance' => max(0, round((float)$o['total'] - (float)$o['amount_paid'], 2)),
             'paymentStatus' => $o['payment_status'], 'payOption' => $o['pay_option'], 'method' => $o['payment'], 'status' => $o['status'],
-            'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status']];
+            'deliveryFee' => (float)$o['delivery_fee'], 'deliveryStatus' => $o['delivery_status'],
+            'balanceDue' => in_array($o['status'], ['packing', 'out-for-delivery'], true) && $o['payment_status'] === 'partial' && round((float)$o['total'] - (float)$o['amount_paid'], 2) > 0.009];
 }
 
 try {
@@ -73,6 +77,14 @@ try {
         try { $f = save_upload($_FILES['design'], 'designs', ['png', 'jpg', 'jpeg'], 10 * 1048576); }
         catch (RuntimeException $e) { fail($e->getMessage()); }
         out(['ok' => true, 'path' => $f[0]]);
+
+    // Customer uploads the document to print (PDF or Word)
+    case 'upload_document':
+        need_customer();
+        if (empty($_FILES['doc'])) fail('Please choose a file.');
+        try { $f = save_upload($_FILES['doc'], 'documents', ['pdf', 'doc', 'docx'], 25 * 1048576); }
+        catch (RuntimeException $e) { fail($e->getMessage()); }
+        out(['ok' => true, 'path' => $f[0], 'name' => $f[1]]);
 
     // Place an order, then send the customer to PayMongo (GCash / PayMaya)
     case 'create_order':
@@ -121,11 +133,12 @@ try {
 
         // the info the customer typed in (name, address, date ...)
         $infoRows = [];
+        $styles = clean_styles($in['styles'] ?? [], empty($svc['needs_info']) ? [] : json_list($svc['info_fields']));
         $vals = is_array($in['info'] ?? null) ? $in['info'] : [];
         foreach (empty($svc['needs_info']) ? [] : json_list($svc['info_fields']) as $f) {
             $v = clean_text($vals[$f['key']] ?? '', 500);
             if (!empty($f['required']) && $v === '') fail('Please fill in: ' . $f['label']);
-            if ($v !== '') $infoRows[] = ['label' => $f['label'], 'value' => $v];
+            if ($v !== '') $infoRows[] = ['label' => $f['label'], 'value' => $v, 'side' => $f['place'] ?? 'front', 'font' => $styles[$f['key']]['font'] ?? '', 'scale' => $styles[$f['key']]['scale'] ?? 1];
         }
 
         // the design: a template, their own upload, an AI prompt, or nothing
@@ -137,7 +150,23 @@ try {
             if ($row = $t->fetch()) $design = ['source' => 'template', 'templateId' => (int)$row['id'], 'file' => $row['file_path']];
         } elseif ($source === 'upload') {
             $path = (string)($d['path'] ?? '');
-            if (preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $path) && is_file(__DIR__ . '/../' . $path)) $design = ['source' => 'upload', 'file' => $path];
+            if (preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $path) && is_file(__DIR__ . '/../' . $path)) {
+                $orig = (string)($d['original'] ?? '');   // the picture before the AI edited it
+                $design = ['source' => 'upload', 'file' => $path, 'original' => preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $orig) ? $orig : null, 'aiPrompt' => clean_text($d['aiPrompt'] ?? '', 300), 'crop' => clean_crop($d['crop'] ?? null)];
+            }
+        } elseif ($source === 'photos') {   // ID photo, Instax, photo print, photo strip: one or more photos
+            $list = [];
+            foreach (array_slice(is_array($d['photos'] ?? null) ? $d['photos'] : [], 0, ($svc['frame_style'] === 'strip') ? 4 : 30) as $ph) {
+                $pp = (string)($ph['path'] ?? ''); $po = (string)($ph['original'] ?? '');
+                if (!preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $pp) || !is_file(__DIR__ . '/../' . $pp)) continue;
+                $list[] = ['file' => $pp, 'original' => preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $po) ? $po : null,
+                           'name' => clean_text($ph['name'] ?? '', 120), 'aiPrompt' => clean_text($ph['aiPrompt'] ?? '', 300), 'crop' => clean_crop($ph['crop'] ?? null)];
+            }
+            if ($list) $design = ['source' => 'photos', 'photos' => $list, 'copies' => max(1, min(1000, (int)($d['copies'] ?? 1)))];
+        } elseif ($source === 'document') {   // a PDF / Word file to print
+            $pp = (string)($d['path'] ?? '');
+            if (preg_match('#^uploads/documents/[a-f0-9]{20}\.(pdf|doc|docx)$#', $pp) && is_file(__DIR__ . '/../' . $pp))
+                $design = ['source' => 'document', 'file' => $pp, 'name' => clean_text($d['name'] ?? '', 190), 'pages' => max(1, min(2000, (int)($d['pages'] ?? 1))), 'copies' => max(1, min(1000, (int)($d['copies'] ?? 1)))];
         } elseif ($source === 'ai') {
             $spec = clean_spec($d['spec'] ?? null);
             if ($spec) $design = ['source' => 'ai', 'prompt' => clean_text($d['prompt'] ?? '', 300), 'spec' => $spec];
@@ -166,37 +195,44 @@ try {
             if ($cutShape === 'photo' && $design['source'] !== 'upload') fail('Please upload your photo so we can remove its background.');
         }
         if ($svc['needs_template'] && $design['source'] === 'none') fail('Please choose a template, describe a design, or upload your own.');
+        // the design of the BACK and of the INSIDE of a card (own uploads), on top of the front design
+        $sides = [];
+        foreach (['back', 'inside'] as $sd) {
+            $sp = (is_array($d['sides'] ?? null) && is_array($d['sides'][$sd] ?? null)) ? (string)($d['sides'][$sd]['path'] ?? '') : '';
+            if (preg_match('#^uploads/designs/[a-f0-9]{20}\.(png|jpg|jpeg)$#', $sp) && is_file(__DIR__ . '/../' . $sp)) $sides[$sd] = $sp;
+        }
+        if ($sides && in_array($design['source'], ['upload', 'template', 'ai', 'none'], true)) $design['sides'] = $sides;
+        $kind = $svc['upload_kind'] ?? 'design';
+        if ($kind === 'photos' && $design['source'] !== 'photos') fail('Please upload at least one photo.');
+        if ($kind === 'document' && $design['source'] !== 'document') fail('Please upload the document you want printed.');
+        // photos / documents: the quantity is worked out here (photos or pages x copies; a photo strip = one strip per copy)
+        if ($design['source'] === 'photos') $qty = (($svc['frame_style'] === 'strip') ? 1 : count($design['photos'])) * $design['copies'];
+        if ($design['source'] === 'document') $qty = $design['pages'] * $design['copies'];
+        if ($qty < 1 || $qty > 100000) fail('Please enter a valid quantity.');
 
         $totalCents = (int)round($unit * $qty * 100);
         if ($totalCents <= 0) fail('This service has no price yet. Please contact us to order.');
         $dueCents = $payOption === 'full' ? $totalCents : (int)ceil($totalCents * DOWNPAYMENT_PERCENT / 100);
         if ($dueCents < 2000) fail('The amount to pay online must be at least ' . "\u{20B1}" . '20. Please increase the quantity.');
 
-        $details = ['selections' => $picked, 'shape' => $shape, 'orientation' => $orientation, 'cutShape' => $cutShape, 'contactPhone' => $contactPhone, 'unitPrice' => round($unit, 2), 'delivery' => $delivery, 'info' => $infoRows, 'design' => $design, 'notes' => clean_text($in['notes'] ?? '', 500)];
+        $details = ['selections' => $picked, 'shape' => $shape, 'orientation' => $orientation, 'cutShape' => $cutShape, 'contactPhone' => $contactPhone, 'unitPrice' => round($unit, 2), 'delivery' => $delivery, 'info' => $infoRows, 'styles' => $styles, 'design' => $design, 'notes' => clean_text($in['notes'] ?? '', 500)];
         db()->prepare("INSERT INTO orders (user_id,service_id,service_name,qty,total,payment,details,payment_status,pay_option,amount_due,fulfillment) VALUES (?,?,?,?,?,'PayMongo',?, 'unpaid',?,?,?)")
             ->execute([$uid, $svc['id'], $svc['name'], $qty, $totalCents / 100, json_encode($details), $payOption, $dueCents / 100, $fulfillment]);
         $id = (int)db()->lastInsertId();
         $code = 'HQ-' . (1000 + $id);
         db()->prepare('UPDATE orders SET order_code=? WHERE id=?')->execute([$code, $id]);
 
-        // snapshot of what the customer designed (so the admin can print it)
-        $png = (string)($in['previewPng'] ?? '');
-        if (strpos($png, 'data:image/png;base64,') === 0) {
-            $bin = base64_decode(substr($png, 22), true);
-            if ($bin !== false && strlen($bin) < 6 * 1048576 && substr($bin, 0, 8) === "\x89PNG\r\n\x1a\n" && @getimagesizefromstring($bin)) {
-                $rel = 'uploads/designs/order-' . $id . '.png';
-                if (is_dir(__DIR__ . '/../uploads/designs') || mkdir(__DIR__ . '/../uploads/designs', 0775, true)) {
-                    file_put_contents(__DIR__ . '/../' . $rel, $bin);
-                    db()->prepare('UPDATE orders SET design_image=? WHERE id=?')->execute([$rel, $id]);
-                }
-            }
-        }
+        // pictures of what the customer designed (the front, and the back when there is one) so the admin can print them
+        $f1 = 'uploads/designs/order-' . $id . '.png'; $f2 = 'uploads/designs/order-' . $id . '-back.png'; $f3 = 'uploads/designs/order-' . $id . '-inside.png';
+        if (save_png_data((string)($in['previewPng'] ?? ''), $f1)) db()->prepare('UPDATE orders SET design_image=? WHERE id=?')->execute([$f1, $id]);
+        if (save_png_data((string)($in['previewBackPng'] ?? ''), $f2)) db()->prepare('UPDATE orders SET design_back_image=? WHERE id=?')->execute([$f2, $id]);
+        if (save_png_data((string)($in['previewInsidePng'] ?? ''), $f3)) db()->prepare('UPDATE orders SET design_inside_image=? WHERE id=?')->execute([$f3, $id]);
 
         try {
             $co = paymongo_checkout($code, $svc['name'], $dueCents, $payOption);
             db()->prepare('UPDATE orders SET checkout_session=? WHERE id=?')->execute([$co['id'], $id]);
         } catch (RuntimeException $e) {
-            delete_file('uploads/designs/order-' . $id . '.png');
+            delete_file('uploads/designs/order-' . $id . '.png'); delete_file('uploads/designs/order-' . $id . '-back.png'); delete_file('uploads/designs/order-' . $id . '-inside.png');
             db()->prepare('DELETE FROM orders WHERE id=?')->execute([$id]);   // don't leave an unpaid ghost order
             fail('We could not start the payment. ' . $e->getMessage(), 502);
         }
@@ -211,8 +247,8 @@ try {
             if ($o['payment_status'] === 'unpaid' && $o['status'] === 'pending' && $o['checkout_session'] && PAYMONGO_SECRET !== '' && $checked < 3) {
                 $checked++; try { $o = sync_payment($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
             }
-            if ($o['delivery_status'] === 'unpaid' && $o['delivery_session'] && PAYMONGO_SECRET !== '' && $checked < 3) {
-                $checked++; try { $o = sync_delivery($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
+            if (in_array($o['status'], ['packing', 'out-for-delivery'], true) && $o['payment_status'] === 'partial' && $o['balance_session'] && PAYMONGO_SECRET !== '' && $checked < 3) {
+                $checked++; try { $o = sync_balance($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
             }
             $list[] = order_full($o);
         }
@@ -236,14 +272,20 @@ try {
     // An inquiry from the Contact Us form (saved so the admin can see it)
     case 'inquiry':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('Method not allowed', 405);
-        $uid = need_customer();
-        $c = db()->prepare('SELECT COUNT(*) FROM inquiries WHERE user_id=? AND created_at > (NOW() - INTERVAL 1 HOUR)'); $c->execute([$uid]);
-        if ($c->fetchColumn() >= 10) fail('You have sent many inquiries. Please wait a while.', 429);
+        // customers AND visitors (no account) can send an inquiry; visitors cannot attach files
+        $uid = (($_SESSION['user']['role'] ?? '') === 'customer') ? (int)$_SESSION['user']['id'] : 0;
+        if (trim((string)($_POST['website'] ?? '')) !== '') out(['ok' => true]);   // hidden field: only bots fill it in
+        $ip = substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+        if ($uid) { $c = db()->prepare('SELECT COUNT(*) FROM inquiries WHERE user_id=? AND created_at > (NOW() - INTERVAL 1 HOUR)'); $c->execute([$uid]); }
+        else { $c = db()->prepare('SELECT COUNT(*) FROM inquiries WHERE user_id IS NULL AND ip=? AND created_at > (NOW() - INTERVAL 1 HOUR)'); $c->execute([$ip]); }
+        if ($c->fetchColumn() >= ($uid ? 10 : 4)) fail('You have sent many inquiries. Please wait a while, or message us on Facebook.', 429);
+        $email = clean_text($_POST['email'] ?? '', 120);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('Please enter a valid email address.');
         $name = clean_text($_POST['name'] ?? '', 80); $contact = clean_text($_POST['contact'] ?? '', 80); $service = clean_text($_POST['service'] ?? '', 80);
         if ($name === '' || $contact === '' || $service === '') fail('Please fill in your name, contact and the service.');
         $qty = max(1, min(100000, (int)($_POST['qty'] ?? 1)));
         $files = [];
-        if (!empty($_FILES['files']) && is_array($_FILES['files']['name'])) {
+        if ($uid && !empty($_FILES['files']) && is_array($_FILES['files']['name'])) {
             $n = min(5, count($_FILES['files']['name']));
             for ($i = 0; $i < $n; $i++) {
                 if (($_FILES['files']['error'][$i] ?? 4) === UPLOAD_ERR_NO_FILE) continue;
@@ -253,8 +295,8 @@ try {
                 } catch (RuntimeException $e) { fail($e->getMessage()); }
             }
         }
-        db()->prepare('INSERT INTO inquiries (user_id,name,contact,service_name,qty,details,files) VALUES (?,?,?,?,?,?,?)')
-            ->execute([$uid, $name, $contact, $service, $qty, clean_text($_POST['details'] ?? '', 3000), json_encode($files)]);
+        db()->prepare('INSERT INTO inquiries (user_id,name,contact,service_name,qty,details,files,email,ip) VALUES (?,?,?,?,?,?,?,?,?)')
+            ->execute([$uid ?: null, $name, $contact, $service, $qty, clean_text($_POST['details'] ?? '', 3000), json_encode($files), $email ?: null, $ip]);
         out(['ok' => true]);
 
     // Removes the background of the customer's uploaded photo with rembg (Python on this computer)
@@ -278,17 +320,21 @@ try {
         $uid = need_customer();
         $o = my_order((string)($in['orderId'] ?? ''), $uid);
         try { $o = sync_payment($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
-        try { $o = sync_delivery($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
+        try { $o = sync_balance($o); } catch (RuntimeException $e) { error_log($e->getMessage()); }
         out(['ok' => true, 'order' => order_summary($o)]);
 
-    // Pay the Lalamove delivery fee (only once the order is packing / out for delivery)
-    case 'pay_delivery':
+    // Pay the balance (what is left after the down payment) from the Packing step on
+    case 'pay_balance':
         $uid = need_customer();
         $o = my_order((string)($in['orderId'] ?? ''), $uid);
-        if ($o['fulfillment'] !== 'delivery' || $o['delivery_status'] !== 'unpaid' || (float)$o['delivery_fee'] <= 0 || !in_array($o['status'], ['packing', 'out-for-delivery'], true)) fail('There is no delivery fee to pay right now.');
-        try { $co = paymongo_delivery_checkout($o['order_code'], (int)round($o['delivery_fee'] * 100)); }
+        $balance = round((float)$o['total'] - (float)$o['amount_paid'], 2);
+        if (!in_array($o['status'], ['packing', 'out-for-delivery'], true)) fail('You can pay the balance once your order is in the Packing step.');
+        if ($o['payment_status'] === 'unpaid') fail('Please pay the down payment first.');
+        if ($balance <= 0.009) fail('Nothing to pay. Your order is fully paid.');
+        if ($balance < 20) fail('The balance is too small to pay online (minimum ' . "\u{20B1}" . '20). Please message us to settle it.');
+        try { $co = paymongo_balance_checkout($o['order_code'], (int)round($balance * 100)); }
         catch (RuntimeException $e) { fail('We could not start the payment. ' . $e->getMessage(), 502); }
-        db()->prepare('UPDATE orders SET delivery_session=? WHERE id=?')->execute([$co['id'], $o['id']]);
+        db()->prepare('UPDATE orders SET balance_session=? WHERE id=?')->execute([$co['id'], $o['id']]);
         out(['ok' => true, 'checkoutUrl' => $co['url']]);
 
     // Retry paying an order that is still unpaid
