@@ -17,7 +17,7 @@
     var renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return null; }
 
-    var rw = opts.w, rh = opts.h, shape = opts.shape || 'no-fold', product = opts.product || 'paper', hole = null, hinge = 'side';
+    var rw = opts.w, rh = opts.h, shape = opts.shape || 'no-fold', product = opts.product || 'paper', hole = null, hinge = 'side', ref = opts.ref || 0;
     var tex = {}, openAmt = 0, openTarget = 0, rotX = -0.1, rotY = 0.38, rotYT = 0.38, dragging = false, last = null, card = null, alive = true;
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -35,7 +35,7 @@
     var root = new THREE.Group(); scene.add(root);
 
     function kind() { return KINDS[product] || KINDS.paper; }
-    function dims() { var s = 2.4 / Math.max(rw, rh); return { w: rw * s, h: rh * s, t: kind().t }; }
+    function dims() { var s = 2.4 / (ref || Math.max(rw, rh)); return { w: rw * s, h: rh * s, t: kind().t }; }   // ref = the biggest size, so smaller sizes look smaller
     function hasChain() { return product === 'keychain' && shape === 'cutout' && !!hole; }
 
     function face(canvas, fallback, glossy, rot) {
@@ -94,8 +94,9 @@
 
     function fit() {
       var d = dims(), a = camera.aspect || 1, fold = shape === 'two-fold', topFold = fold && hinge === 'top';
-      var wide = (fold && !topFold) ? d.w * 2 : d.w, extra = hasChain() ? 1.1 : 0;
-      var needH = ((topFold ? d.h * 2 : d.h) + extra) * 1.25, needW = wide * 1.2 / a, half = Math.max(needH, needW) / 2;
+      var wide = (fold && !topFold) ? d.w * 2 : d.w, tall = topFold ? d.h * 2 : d.h, extra = hasChain() ? 1.1 : 0;
+      if (ref) { wide = Math.max(wide, 2.4); tall = Math.max(tall, 2.4); }
+      var needH = (tall + extra) * 1.25, needW = wide * 1.2 / a, half = Math.max(needH, needW) / 2;
       camera.position.set(0, 0, half / Math.tan(camera.fov * Math.PI / 360));
     }
 
@@ -132,7 +133,7 @@
     return {
       setTextures: function (t) { tex = t || {}; build(); },
       setShape: function (s) { if (s !== shape) { shape = s; openTarget = 0; openAmt = 0; build(); } },
-      setSize: function (w, h) { if (w === rw && h === rh) return; rw = w; rh = h; build(); },
+      setSize: function (w, h, r) { r = r || 0; if (w === rw && h === rh && r === ref) return; rw = w; rh = h; ref = r; build(); },
       setProduct: function (p, h) { product = p || 'paper'; hole = h || null; },
       setHinge: function (h) { hinge = h === 'top' ? 'top' : 'side'; },
       setOpen: function (b) { openTarget = b ? 1 : 0; },
