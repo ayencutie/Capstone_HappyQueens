@@ -5,7 +5,7 @@
   document.documentElement.style.visibility = 'hidden';
   hqApi('me').then(function (r) {
     if (!r.ok || !r.user || r.user.role !== 'admin') {
-      window.location.replace(hqAsset('client-side/html/index.html'));
+      window.location.replace(hqAsset('client-side/without-account/index.html'));
     } else {
       document.documentElement.style.visibility = '';
     }
@@ -28,7 +28,7 @@
     if (out) out.addEventListener('click', async function (e) {
       e.preventDefault();
       await hqApi('logout', {});
-      window.location.href = hqAsset('client-side/html/index.html');
+      window.location.href = hqAsset('client-side/without-account/index.html');
     });
   });
 

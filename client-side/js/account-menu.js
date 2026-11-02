@@ -5,7 +5,7 @@
   document.documentElement.style.visibility = 'hidden';
   const r = await hqApi('me');
   if (!r.ok || !r.user || r.user.role !== 'customer') {
-    window.location.replace('index.html');
+    window.location.replace('../without-account/index.html');
     return;
   }
   document.documentElement.style.visibility = '';
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async function () {
       await hqApi('logout', {});
-      window.location.href = 'index.html';
+      window.location.href = '../without-account/index.html';
     });
   }
 });

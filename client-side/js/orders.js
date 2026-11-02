@@ -7,7 +7,10 @@ hqOnReady(async function () {
     var refund = O.refundText(o);
     var actions = '<a class="btn btn-outline" href="track-order2.html?order=' + encodeURIComponent(o.orderId) + '">Track</a>';
     if (o.paymentStatus === 'unpaid' && o.status !== 'cancelled') actions += '<button type="button" class="btn btn-filled" data-pay="' + esc(o.orderId) + '">Pay now</button>';
-    if (o.deliveryDue) actions += '<button type="button" class="btn btn-filled" data-paydel="' + esc(o.orderId) + '">Pay delivery fee ' + O.peso(o.deliveryFee) + '</button>';
+    if (o.balanceDue) actions += '<button type="button" class="btn btn-filled" data-paybal="' + esc(o.orderId) + '">Pay balance ' + O.peso(o.balance) + '</button>';
+    var reminder = '';
+    if (o.balanceHold) reminder = '<div class="pay-reminder"><i class="fa-solid fa-bell"></i><div><b>Your order is being packed. Please pay your balance of ' + O.peso(o.balance) + ' now.</b><br>We cannot send it out for delivery until the balance is paid. Tap <b>Pay balance</b> below (GCash / PayMaya).</div></div>';
+    else if (o.balanceDue) reminder = '<div class="pay-reminder"><i class="fa-solid fa-bell"></i><div><b>Balance to pay: ' + O.peso(o.balance) + '</b><br>You can pay it now with <b>Pay balance</b>, or at the shop when you pick it up.</div></div>';
     if (o.canCancel) actions += '<button type="button" class="btn btn-danger" data-cancel="' + esc(o.orderId) + '">Cancel order</button>';
     var note = (!o.canCancel && o.status !== 'cancelled' && o.status !== 'completed') ? '<p class="my-order-note">This order is already being processed, so it can no longer be cancelled.</p>' : '';
     return '<div class="my-order">' + thumb + '<div class="my-order-body">' +
@@ -17,7 +20,7 @@ hqOnReady(async function () {
       '<div class="my-order-pay">' + esc(O.payText(o)) + '</div>' +
       '<div class="my-order-pay"><i class="fa-solid fa-truck-fast"></i> ' + esc(O.deliveryText(o)) + '</div>' +
       (refund ? '<div class="my-order-refund"><i class="fa-solid fa-rotate-left"></i> ' + esc(refund) + '</div>' : '') + note +
-      '<div class="my-order-actions">' + actions + '</div></div></div>';
+      reminder + '<div class="my-order-actions">' + actions + '</div></div></div>';
   }
 
   function render() {
@@ -32,8 +35,8 @@ hqOnReady(async function () {
         render();
       });
     });
-    box.querySelectorAll('[data-paydel]').forEach(function (b) {
-      b.addEventListener('click', function () { b.disabled = true; O.payDelivery(orders.find(function (x) { return x.orderId === b.dataset.paydel; })); });
+    box.querySelectorAll('[data-paybal]').forEach(function (b) {
+      b.addEventListener('click', function () { b.disabled = true; O.payBalance(orders.find(function (x) { return x.orderId === b.dataset.paybal; })); });
     });
     box.querySelectorAll('[data-pay]').forEach(function (b) {
       b.addEventListener('click', function () { b.disabled = true; O.payNow(orders.find(function (x) { return x.orderId === b.dataset.pay; })); });

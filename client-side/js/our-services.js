@@ -15,7 +15,8 @@ hqOnReady(async function () {
     var priceHtml = s.fromPrice ? '<div class="service-price">From &#8369;' + hqEsc(String(s.fromPrice)) + (s.unitLabel && s.unitLabel !== 'pc' ? ' / ' + hqEsc(s.unitLabel) : '') + '</div>'
       : price ? '<div class="service-price">' + (/\d/.test(price) ? 'From &#8369;' : '') + hqEsc(price) + '</div>' : '';
     // the order page set in Admin > Services, or a generic one with the service id
-    var href = s.orderUrl ? s.orderUrl : 'order.html?service=' + s.id;
+    var pre = document.body.dataset.guest ? '../with-account/' : '';   // guests are sent to the logged-in folder after they log in
+    var href = pre + (s.orderUrl ? s.orderUrl : 'order.html?service=' + s.id);
     return '<div class="service-card"><div class="service-image-wrap">' + img + '</div>' +
       '<div class="service-card-body"><h3>' + hqEsc(s.name) + '</h3><p>' + hqEsc(s.description) + '</p>' + priceHtml +
       '<button type="button" class="btn btn-order-now" data-href="' + hqEsc(href) + '">Order Now</button></div></div>';

@@ -39,14 +39,14 @@
   function deliveryText(o) {
     if (o.fulfillment !== 'delivery') return 'Pick up at the shop';
     if (o.deliveryStatus === 'paid') return 'Delivery by Lalamove \u2014 delivery fee ' + peso(o.deliveryFee) + ' paid' + (o.lalamoveRef ? ' (' + o.lalamoveRef + ')' : '');
-    if (o.deliveryDue) return 'Delivery by Lalamove \u2014 delivery fee ' + peso(o.deliveryFee) + ' to pay';
-    return 'Delivery by Lalamove \u2014 the delivery fee will be added when your order is being packed';
+    if (o.deliveryCod) return 'Delivery by Lalamove \u2014 delivery fee ' + peso(o.deliveryFee) + ', paid to the rider on delivery (COD)';
+    return 'Delivery by Lalamove \u2014 the delivery fee is added when your order is packed, and you pay it to the rider (COD)';
   }
-  async function payDelivery(o) {
-    var r = await hqShop('pay_delivery', { orderId: o.orderId });
+  async function payBalance(o) {
+    var r = await hqShop('pay_balance', { orderId: o.orderId });
     if (!r.ok) { alert(r.error || 'Could not start the payment.'); return; }
     window.location.href = r.checkoutUrl;
   }
 
-  window.HQOrders = { deliveryText: deliveryText, payDelivery: payDelivery, LABEL: LABEL, STEPS: STEPS, peso: peso, dateText: dateText, payText: payText, refundText: refundText, cancel: cancel, payNow: payNow };
+  window.HQOrders = { deliveryText: deliveryText, payBalance: payBalance, LABEL: LABEL, STEPS: STEPS, peso: peso, dateText: dateText, payText: payText, refundText: refundText, cancel: cancel, payNow: payNow };
 })();

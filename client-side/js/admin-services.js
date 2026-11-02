@@ -25,6 +25,7 @@ hqOnReady(function () {
     s.priceMatrix = s.priceMatrix || { groups: [], prices: {} };
     if (Array.isArray(s.priceMatrix.prices) || !s.priceMatrix.prices) s.priceMatrix.prices = {};
     s.priceMatrix.groups = s.priceMatrix.groups || [];
+    (s.infoFields || []).forEach(function (f) { if (!f.place) f.place = 'front'; });
     (s.choices || []).forEach(function (g) { if (!g.id) g.id = uid(); g.options.forEach(function (o) { if (!o.id) o.id = uid(); }); });
   }
   function toast(msg) { alert(msg); }
@@ -106,6 +107,8 @@ hqOnReady(function () {
     $('detailSettingsAI').checked = s.aiEnabled; $('detailSettingsUpload').checked = s.uploadEnabled;
     $('detailSettingsNeedsInfo').checked = s.needsInfo;
     $('detailSettingsProduct').value = s.productType;
+    $('detailSettingsUploadKind').value = s.uploadKind || 'design'; $('detailSettingsAiMode').value = s.aiMode || 'design';
+    $('detailSettingsFrame').value = s.frameStyle || ''; $('detailSettingsDoubleSided').checked = !!s.doubleSided;
     $('detailSettingsUnit').value = s.unitLabel || 'pc';
     ['Circle', 'Triangle', 'Square', 'Heart', 'Photo'].forEach(function (n) { $('detailSettingsCut' + n).checked = s.cutShapes.indexOf(n.toLowerCase()) !== -1; });
     $('detailSettingsCutHole').checked = s.cutHole;
@@ -244,23 +247,29 @@ hqOnReady(function () {
     });
   }
 
+  // option groups. A group can set the real SIZE shown in the preview (A4, 4R, 1x1...) or the print COLOR (black & white / colored).
   function renderChoices() {
     renderPriceTable();
-    var box = $('optionGroupsList');
-    var groups = current.choices;
+    var box = $('optionGroupsList'), groups = current.choices;
     $('detailTabChoicesCount').textContent = '(' + groups.length + ')';
-    if (!groups.length) { box.innerHTML = '<div class="admin-option-groups-empty">No options yet. Add a group such as "Size" or "Finish".</div>'; return; }
+    if (!groups.length) { box.innerHTML = '<div class="admin-option-groups-empty">No options yet. Add a group such as "Paper size" or "Print color".</div>'; return; }
     box.innerHTML = groups.map(function (g, gi) {
+      var role = g.role || '';
       return '<div class="admin-option-group" data-g="' + gi + '">' +
         '<div class="admin-option-group-header">' +
           '<input type="text" class="admin-option-group-name" data-f="gname" value="' + esc(g.name) + '">' +
           '<div class="admin-option-group-header-actions">' +
+            '<select data-f="role" title="What this group controls in the preview"><option value="">Normal</option><option value="size">Size (sets the preview size)</option><option value="color">Print color (B&amp;W / colored)</option></select>' +
+            (role === 'size' ? '<select data-f="unit" title="Unit of the sizes"><option value="mm">mm</option><option value="cm">cm</option><option value="in">in</option></select>' : '') +
             '<label class="admin-required-toggle"><input type="checkbox" data-f="req"' + (g.required ? ' checked' : '') + '> Required</label>' +
             '<button type="button" class="admin-link-btn is-danger" data-f="delg">Delete group</button>' +
           '</div></div>' +
         '<div class="admin-option-rows">' + g.options.map(function (o, oi) {
           return '<div class="admin-option-row" data-o="' + oi + '"><span class="admin-option-dot"></span>' +
             '<input type="text" class="admin-option-name-input" data-f="oname" value="' + esc(o.name) + '" placeholder="Option name">' +
+            (role === 'size' ? '<span class="admin-option-price"><input type="number" min="0" step="0.1" data-f="ow" value="' + esc(o.w || '') + '" placeholder="W" style="width:68px"> &times; <input type="number" min="0" step="0.1" data-f="oh" value="' + esc(o.h || '') + '" placeholder="H" style="width:68px"> ' + esc(g.unit || 'mm') + '</span>' : '') +
+            (role === 'color' ? '<label class="admin-required-toggle"><input type="checkbox" data-f="omono"' + (o.mono ? ' checked' : '') + '> B&amp;W</label>' : '') +
+            '<input type="text" data-f="onote" value="' + esc(o.note || '') + '" placeholder="Note (optional)" style="flex:1;min-width:110px;padding:7px 10px;border:1px solid #dcecec;border-radius:8px;font:inherit;font-size:12.5px;">' +
             '<span class="admin-option-price">+&#8369;<input type="number" min="0" step="0.01" data-f="oprice" value="' + esc(o.price) + '"></span>' +
             '<button type="button" class="admin-link-btn is-danger" data-f="delo" style="margin:0;">Remove</button></div>';
         }).join('') + '</div>' +
@@ -269,22 +278,26 @@ hqOnReady(function () {
 
     box.querySelectorAll('.admin-option-group').forEach(function (el) {
       var g = groups[parseInt(el.dataset.g, 10)];
+      el.querySelector('[data-f="role"]').value = g.role || '';
+      var unitSel = el.querySelector('[data-f="unit"]'); if (unitSel) { unitSel.value = g.unit || 'mm'; unitSel.addEventListener('change', function (e) { g.unit = e.target.value; renderChoices(); saveChoicesSoon(); }); }
+      el.querySelector('[data-f="role"]').addEventListener('change', function (e) { g.role = e.target.value; renderChoices(); saveChoicesSoon(); });
       el.querySelector('[data-f="gname"]').addEventListener('input', function (e) { g.name = e.target.value; saveChoicesSoon(); });
       el.querySelector('[data-f="req"]').addEventListener('change', function (e) { g.required = e.target.checked; saveChoicesSoon(); });
       el.querySelector('[data-f="delg"]').addEventListener('click', function () {
         if (!confirm('Delete the group "' + g.name + '"?')) return;
         groups.splice(groups.indexOf(g), 1); renderChoices(); saveChoicesSoon();
       });
-      el.querySelector('[data-f="addo"]').addEventListener('click', function () {
-        g.options.push({ id: uid(), name: '', price: 0 }); renderChoices(); saveChoicesSoon();
-      });
+      el.querySelector('[data-f="addo"]').addEventListener('click', function () { g.options.push({ id: uid(), name: '', price: 0, w: 0, h: 0, mono: false, note: '' }); renderChoices(); saveChoicesSoon(); });
       el.querySelectorAll('.admin-option-row').forEach(function (row) {
         var o = g.options[parseInt(row.dataset.o, 10)];
         row.querySelector('[data-f="oname"]').addEventListener('input', function (e) { o.name = e.target.value; saveChoicesSoon(); });
+        row.querySelector('[data-f="onote"]').addEventListener('input', function (e) { o.note = e.target.value; saveChoicesSoon(); });
         row.querySelector('[data-f="oprice"]').addEventListener('input', function (e) { o.price = parseFloat(e.target.value) || 0; saveChoicesSoon(); });
-        row.querySelector('[data-f="delo"]').addEventListener('click', function () {
-          g.options.splice(g.options.indexOf(o), 1); renderChoices(); saveChoicesSoon();
-        });
+        var w = row.querySelector('[data-f="ow"]'), h = row.querySelector('[data-f="oh"]'), m = row.querySelector('[data-f="omono"]');
+        if (w) w.addEventListener('input', function (e) { o.w = parseFloat(e.target.value) || 0; saveChoicesSoon(); });
+        if (h) h.addEventListener('input', function (e) { o.h = parseFloat(e.target.value) || 0; saveChoicesSoon(); });
+        if (m) m.addEventListener('change', function (e) { o.mono = e.target.checked; saveChoicesSoon(); });
+        row.querySelector('[data-f="delo"]').addEventListener('click', function () { g.options.splice(g.options.indexOf(o), 1); renderChoices(); saveChoicesSoon(); });
       });
     });
   }
@@ -294,11 +307,13 @@ hqOnReady(function () {
     $('detailTabInfoCount').textContent = '(' + list.length + ')';
     if (!list.length) { box.innerHTML = '<div class="admin-option-groups-empty">No info fields. Customers will not be asked to type anything (good for things like a plain photo print).</div>'; return; }
     var types = { text: 'Short text', textarea: 'Long text', date: 'Date', time: 'Time' };
+    var places = { front: 'Printed on the front', inside: 'Printed inside (folded card)', back: 'Printed on the back' };
     box.innerHTML = list.map(function (f, i) {
       return '<div class="admin-option-group" data-i="' + i + '"><div class="admin-option-group-header">' +
         '<input type="text" class="admin-option-group-name" data-f="label" value="' + esc(f.label) + '" placeholder="e.g. Venue / Address">' +
         '<div class="admin-option-group-header-actions">' +
           '<select data-f="type">' + Object.keys(types).map(function (k) { return '<option value="' + k + '"' + (k === f.type ? ' selected' : '') + '>' + types[k] + '</option>'; }).join('') + '</select>' +
+          '<select data-f="place" title="Where this text is printed">' + Object.keys(places).map(function (k) { return '<option value="' + k + '"' + (k === (f.place || 'front') ? ' selected' : '') + '>' + places[k] + '</option>'; }).join('') + '</select>' +
           '<label class="admin-required-toggle"><input type="checkbox" data-f="req"' + (f.required ? ' checked' : '') + '> Required</label>' +
           (i > 0 ? '<button type="button" class="admin-link-btn" data-f="up">&uarr;</button>' : '') +
           '<button type="button" class="admin-link-btn is-danger" data-f="del">Remove</button>' +
@@ -308,6 +323,7 @@ hqOnReady(function () {
       var f = list[parseInt(el.dataset.i, 10)];
       el.querySelector('[data-f="label"]').addEventListener('input', function (e) { f.label = e.target.value; saveChoicesSoon(); });
       el.querySelector('[data-f="type"]').addEventListener('change', function (e) { f.type = e.target.value; saveChoicesSoon(); });
+      el.querySelector('[data-f="place"]').addEventListener('change', function (e) { f.place = e.target.value; saveChoicesSoon(); });
       el.querySelector('[data-f="req"]').addEventListener('change', function (e) { f.required = e.target.checked; saveChoicesSoon(); });
       el.querySelector('[data-f="del"]').addEventListener('click', function () { list.splice(list.indexOf(f), 1); renderInfoFields(); saveChoicesSoon(); });
       var up = el.querySelector('[data-f="up"]');
@@ -319,7 +335,8 @@ hqOnReady(function () {
     return { id: s.id, name: s.name, description: s.description, priceText: s.priceText, orderUrl: s.orderUrl,
              needsTemplate: s.needsTemplate, isActive: s.isActive, occasions: s.occasions, choices: s.choices,
              previewMode: s.previewMode, shapes: s.shapes, ratioW: s.ratioW, ratioH: s.ratioH, textPosition: s.textPosition,
-             aiEnabled: s.aiEnabled, uploadEnabled: s.uploadEnabled, infoFields: s.infoFields, needsInfo: s.needsInfo, cutShapes: s.cutShapes, cutHole: s.cutHole, productType: s.productType, priceMatrix: s.priceMatrix, unitLabel: s.unitLabel };
+             aiEnabled: s.aiEnabled, uploadEnabled: s.uploadEnabled, infoFields: s.infoFields, needsInfo: s.needsInfo, cutShapes: s.cutShapes, cutHole: s.cutHole, productType: s.productType, priceMatrix: s.priceMatrix, unitLabel: s.unitLabel,
+             uploadKind: s.uploadKind, aiMode: s.aiMode, frameStyle: s.frameStyle, doubleSided: s.doubleSided };
   }
 
   // ---------- chips (occasions) ----------
@@ -380,7 +397,7 @@ hqOnReady(function () {
   $('detailSettingsPreview').addEventListener('change', function (e) { $('detailSettingsShapesWrap').style.display = e.target.value === '3d' ? '' : 'none'; });
   // info fields
   $('addInfoFieldBtn').addEventListener('click', function () {
-    current.infoFields.push({ label: '', type: 'text', required: false });
+    current.infoFields.push({ label: '', type: 'text', required: false, place: 'front' });
     renderInfoFields(); saveChoicesSoon();
   });
 
@@ -432,6 +449,8 @@ hqOnReady(function () {
     current.aiEnabled = $('detailSettingsAI').checked; current.uploadEnabled = $('detailSettingsUpload').checked;
     current.needsInfo = $('detailSettingsNeedsInfo').checked;
     current.productType = $('detailSettingsProduct').value;
+    current.uploadKind = $('detailSettingsUploadKind').value; current.aiMode = $('detailSettingsAiMode').value;
+    current.frameStyle = $('detailSettingsFrame').value; current.doubleSided = $('detailSettingsDoubleSided').checked;
     current.unitLabel = $('detailSettingsUnit').value.trim() || 'pc';
     current.cutShapes = ['Circle', 'Triangle', 'Square', 'Heart', 'Photo'].filter(function (n) { return $('detailSettingsCut' + n).checked; }).map(function (n) { return n.toLowerCase(); });
     current.cutHole = $('detailSettingsCutHole').checked;

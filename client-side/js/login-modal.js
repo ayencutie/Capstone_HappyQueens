@@ -1,14 +1,14 @@
 // Log In modal — shared behavior across all pages (needs api.js loaded first)
 
-var HQ_ADMIN_HOME = '../../admin-dashboard.html';   // from client-side/html/ up to the project root
-var HQ_CUSTOMER_HOME = 'homepage.html';             // logged-in customer homepage (same folder)
+var HQ_ADMIN_HOME = '../../admin/admin-dashboard.html';   // admin panel (admin/ folder)
+var HQ_CUSTOMER_HOME = '../with-account/homepage.html';   // logged-in customer homepage
 
 async function hqLogin(identifier, password) {
   const r = await hqApi('login', { identifier: identifier, password: password });
   if (!r.ok) { alert(r.error || 'Login failed.'); return false; }
   var next = null;
   try { next = sessionStorage.getItem('hq_next'); sessionStorage.removeItem('hq_next'); } catch (e) {}
-  if (!/^[A-Za-z0-9._-]+\.html(\?[A-Za-z0-9=&_.-]*)?$/.test(next || '')) next = null;
+  if (!/^(\.\.\/with-account\/)?[A-Za-z0-9._-]+\.html(\?[A-Za-z0-9=&_.-]*)?$/.test(next || '')) next = null;
   window.location.href = r.role === 'admin' ? HQ_ADMIN_HOME : (next || HQ_CUSTOMER_HOME);
   return true;
 }
@@ -72,5 +72,5 @@ document.addEventListener('DOMContentLoaded', function () {
   if (pageGoogle) pageGoogle.addEventListener('click', hqLoginWithGoogle);
 
   if (googleBtn) googleBtn.addEventListener('click', hqLoginWithGoogle);
-  if (registerBtn) registerBtn.addEventListener('click', function () { window.location.href = '../html/register.html'; });
+  if (registerBtn) registerBtn.addEventListener('click', function () { window.location.href = 'register.html'; });
 });

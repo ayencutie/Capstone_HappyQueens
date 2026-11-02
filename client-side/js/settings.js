@@ -23,6 +23,6 @@ hqOnReady(function () {
     var r = await hqApi('delete_account', { password: $('deletePassword').value });
     if (!r.ok) { btn.disabled = false; say(msg, r.error || 'Could not delete the account.', false); return; }
     alert('Your account was deleted. Goodbye!');
-    window.location.href = 'index.html';
+    window.location.href = '../without-account/index.html';
   });
 });
