@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send an Inquiry — Happy Queen's Crafty House</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="../css/register.css">
+<link rel="stylesheet" href="../css/login-modal.css">
+
+  <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <nav class="navbar container">
+
+      <div class="logo">
+        <div class="logo-mark">
+          <img src="../../images/logo.png" onerror="this.onerror=null;this.src='https://scontent.fmnl17-5.fna.fbcdn.net/v/t39.30808-6/574903601_1244383761044499_6185672699345779707_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx1500x1500&amp;ctp=s1500x1500&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=6ee11a&amp;_nc_eui2=AeF9_bgph0-v6-rJ_ySImoFND3WxF8Aa7wIPdbEXwBrvAqWFffBVusn27o6ZnrpaCeWp-FOHq7MlkBnEoDXhyeUo&amp;_nc_ohc=eDMA4MEgCgkQ7kNvwGh_7JC&amp;_nc_oc=AdpAmp4jTx-JaznqJ4r-mOJFdoVoMadQ7NJC81W9Ak6R4iVkWcgGqX4l-0Cdt2sS8dI&amp;_nc_zt=23&amp;_nc_ht=scontent.fmnl17-5.fna&amp;_nc_gid=j7RmVAP06tKlhbe9JuESwQ&amp;_nc_ss=7b2a8&amp;oh=00_AQTAywSyjO-G8GTkUCSBQCsPTqh-SfSwTpf-V_TORSkHqg&amp;oe=6AEE1F7F'" alt="Happy Queen's logo">
+        </div>
+        <div>
+          <div class="logo-name">Happy Queen's</div>
+          <div class="logo-tagline">CRAFTY HOUSE</div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about-us.html">About Us</a></li>
+        <li><a href="our-services.html">Our Services</a></li>
+        <li><a class="is-active" href="contact-us.html">Contact Us</a></li>
+        <li><a href="track-order.html">Track Order</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button type="button" class="btn btn-outline" id="loginNavBtn">Log In</button>
+        <a href="register.html" class="btn btn-filled">Register</a>
+      </div>
+
+    </nav>
+  </header>
+
+  
+  <main>
+
+    <section class="pg-hero is-short">
+      <div class="container">
+        <span class="pg-eyebrow">Inquiry form</span>
+        <h1>Send us an inquiry</h1>
+        <p>Tell us what you have in mind and we will get back to you with a quotation.</p>
+      </div>
+    </section>
+
+    <section class="pg-section" style="padding-top:48px;">
+      <div class="container pg-form-wrap" id="inquiry-form">
+        <div class="pg-form">
+          <div id="formHead"><h2>Your inquiry</h2><p class="pg-panel-sub">Fields marked with <span style="color:#c0392b">*</span> are required.</p></div>
+          <form id="inquiryForm" novalidate>
+            <div class="pg-row">
+              <div class="pg-field"><label for="fullName">Full name <span class="req">*</span></label><input type="text" id="fullName" maxlength="80" autocomplete="name"></div>
+              <div class="pg-field"><label for="contactNumber">Mobile number <span class="req">*</span></label><input type="tel" id="contactNumber" placeholder="09XX XXX XXXX" maxlength="20" autocomplete="tel"></div>
+            </div>
+            <div class="pg-field"><label for="email">Email <small style="font-weight:400;color:var(--color-text-light)">(optional)</small></label><input type="email" id="email" maxlength="120" autocomplete="email"></div>
+            <div class="pg-row">
+              <div class="pg-field"><label for="serviceType">What are you interested in? <span class="req">*</span></label><select id="serviceType"><option value="General question">General question / not sure yet</option></select><p class="pg-hint" id="serviceHint"></p></div>
+              <div class="pg-field"><label for="quantity">Quantity</label><input type="number" id="quantity" min="1" max="100000" value="1"></div>
+            </div>
+            <div class="pg-options" id="optionFields"></div>
+            <div class="pg-field"><label for="neededBy">Needed by <small style="font-weight:400;color:var(--color-text-light)">(optional)</small></label><input type="date" id="neededBy"></div>
+            <div class="pg-field"><label for="details">Tell us what you need <span class="req">*</span></label><textarea id="details" maxlength="3000" placeholder="Size, colors, text to print, occasion, anything that helps us quote you."></textarea></div>
+            <div class="pg-field" id="fileRow"><label for="files">Reference files <small style="font-weight:400;color:var(--color-text-light)">(optional, up to 5)</small></label><input type="file" id="files" multiple accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"><p class="pg-hint">Pictures, PDF or Word files, up to the size allowed by the shop.</p></div>
+            <div class="pg-hp" aria-hidden="true"><label>Website <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
+            <div class="pg-status" id="formStatus" role="alert"></div>
+            <button type="submit" class="pg-btn is-solid" id="submitBtn"><i class="fa-solid fa-paper-plane"></i> Send inquiry</button>
+          </form>
+          <div class="pg-success" id="successPanel">
+            <div class="pg-icon"><i class="fa-solid fa-check"></i></div>
+            <h2>Thank you! We got your inquiry.</h2>
+            <p>We will reply to your mobile number as soon as we can. For a faster answer you can also message us on Facebook.</p>
+            <div class="pg-btn-row" style="margin-top:0;"><a class="pg-btn is-solid" href="our-services.html">Browse services</a><button type="button" class="pg-btn is-outline" id="sendAnother">Send another inquiry</button></div>
+          </div>
+        </div>
+
+        <aside class="pg-side">
+          <div class="pg-card"><h3>For a faster quote, include</h3><ul><li>The product and size you want</li><li>How many you need</li><li>Your colors, text or reference pictures</li><li>The date you need it by</li></ul></div>
+          <div class="pg-card"><h3>Prefer to chat?</h3><p>Message us on Facebook, or call 0996 533 2418.</p><div class="pg-btn-row" style="justify-content:flex-start;margin-top:16px;"><a class="pg-btn is-outline" href="https://www.facebook.com/HappyQueensCraftyHouse" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-messenger"></i> Messenger</a></div></div>
+          <div class="pg-card"><h3>Have an account?</h3><p>Log in to attach reference files and track your orders. You can still send an inquiry without one.</p></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Log In modal -->
+  <div class="modal-overlay" id="loginModalOverlay">
+    <div class="auth-card auth-card-center" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+      <button type="button" class="modal-close" id="loginModalClose" aria-label="Close">&times;</button>
+      <span class="auth-eyebrow">Welcome Back</span>
+      <h1 id="loginModalTitle">Log In</h1>
+      <p class="auth-sub">Enter your email or phone number and password.</p>
+
+      <form id="loginModalForm" novalidate style="text-align:left;">
+        <div class="form-field">
+          <label for="loginIdentifier">Email or Phone Number</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="loginIdentifier" name="loginIdentifier" placeholder="you@gmail.com or 09XX XXX XXXX" required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="loginModalPassword">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="loginModalPassword" name="loginModalPassword" placeholder="Enter your password" required>
+          </div>
+        </div>
+
+        <p class="auth-footnote" style="margin:-6px 0 18px; text-align:right;"><a href="forgot-password.html" id="forgotPasswordLink">Forgot password?</a></p>
+
+        <button type="submit" class="btn-auth-primary">Log In</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <button type="button" class="btn-auth-google" id="googleModalLoginBtn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+        Continue with Google
+      </button>
+
+      <p class="auth-footnote">Don't have an account yet? <button type="button" class="link-btn" id="goToRegisterBtn">Register</button></p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/password-toggle.js"></script>
+  <script src="../js/login-modal.js"></script>
+
+  <script src="../js/contact-inquiry.js"></script>
+</body>
+</html>
